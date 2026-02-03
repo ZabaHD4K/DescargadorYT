@@ -18,16 +18,16 @@ import sys
 import threading
 import urllib.request
 import json
-import shutil
-import tempfile
+import webbrowser
 
 
 def verificar_actualizacion_app():
-    """Verifica si hay una nueva versión disponible en GitHub y la descarga."""
+    """Verifica si hay una nueva versión disponible en GitHub."""
     GITHUB_REPO = "ZabaHD4K/DescargadorYT"
     GITHUB_API_URL = f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest"
+    DOWNLOAD_URL = f"https://github.com/{GITHUB_REPO}/releases/latest"
     
-    # Solo actualizar si se está ejecutando como .exe
+    # Solo verificar si se está ejecutando como .exe
     if not getattr(sys, 'frozen', False):
         return  # No hacer nada si se ejecuta desde Python directamente
     
@@ -46,95 +46,48 @@ def verificar_actualizacion_app():
                 # Hay una nueva versión disponible
                 ventana_update = tk.Tk()
                 ventana_update.title("Actualización disponible")
-                ventana_update.geometry("450x180")
+                ventana_update.geometry("450x200")
                 ventana_update.resizable(False, False)
                 ventana_update.eval('tk::PlaceWindow . center')
                 
                 tk.Label(
                     ventana_update,
-                    text=f"Nueva versión disponible: v{latest_version}",
-                    font=("Arial", 12, "bold")
+                    text=f"¡Nueva versión disponible!",
+                    font=("Arial", 13, "bold"),
+                    fg="#2e7d32"
                 ).pack(pady=15)
                 
                 tk.Label(
                     ventana_update,
-                    text=f"Versión actual: v{current_version}",
+                    text=f"Versión actual: v{current_version}  →  Nueva versión: v{latest_version}",
                     font=("Arial", 10)
                 ).pack(pady=5)
                 
-                label_estado = tk.Label(
+                tk.Label(
                     ventana_update,
-                    text="¿Descargar e instalar ahora?",
-                    font=("Arial", 10)
-                )
-                label_estado.pack(pady=10)
+                    text="Se abrirá tu navegador para descargar la actualización.",
+                    font=("Arial", 9),
+                    fg="gray"
+                ).pack(pady=5)
                 
-                def descargar_actualizar():
-                    label_estado.config(text="Descargando actualización...")
-                    ventana_update.update()
-                    
-                    try:
-                        # Buscar el asset .exe en el release
-                        exe_url = None
-                        for asset in data.get('assets', []):
-                            if asset['name'].endswith('.exe'):
-                                exe_url = asset['browser_download_url']
-                                break
-                        
-                        if not exe_url:
-                            raise Exception("No se encontró el ejecutable en el release")
-                        
-                        # Descargar el nuevo .exe a un archivo temporal
-                        temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.exe')
-                        temp_file.close()
-                        
-                        urllib.request.urlretrieve(exe_url, temp_file.name)
-                        
-                        # Obtener la ruta del ejecutable actual
-                        current_exe = sys.executable
-                        backup_exe = current_exe + '.old'
-                        
-                        # Crear un script batch para reemplazar el ejecutable
-                        batch_script = f'''
-@echo off
-ping 127.0.0.1 -n 2 > nul
-del /F /Q "{backup_exe}" 2>nul
-move /Y "{current_exe}" "{backup_exe}"
-move /Y "{temp_file.name}" "{current_exe}"
-start "" "{current_exe}"
-del "%~f0"
-'''
-                        
-                        batch_file = tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.bat')
-                        batch_file.write(batch_script)
-                        batch_file.close()
-                        
-                        label_estado.config(text="Instalando actualización...")
-                        ventana_update.update()
-                        ventana_update.after(500)
-                        
-                        # Ejecutar el script y cerrar la aplicación
-                        subprocess.Popen([batch_file.name], shell=True)
-                        sys.exit(0)
-                        
-                    except Exception as e:
-                        label_estado.config(text=f"Error: {str(e)[:40]}", fg="red")
-                        ventana_update.after(3000, ventana_update.destroy)
+                def ir_a_descarga():
+                    webbrowser.open(DOWNLOAD_URL)
+                    ventana_update.destroy()
                 
                 def omitir():
                     ventana_update.destroy()
                 
                 frame_botones = tk.Frame(ventana_update)
-                frame_botones.pack(pady=10)
+                frame_botones.pack(pady=20)
                 
                 tk.Button(
                     frame_botones,
-                    text="Actualizar",
-                    command=descargar_actualizar,
+                    text="Descargar Actualización",
+                    command=ir_a_descarga,
                     bg="#4CAF50",
                     fg="white",
                     font=("Arial", 10, "bold"),
-                    width=12
+                    width=20
                 ).pack(side="left", padx=5)
                 
                 tk.Button(
