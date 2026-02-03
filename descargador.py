@@ -7,7 +7,7 @@ Description: A user-friendly YouTube downloader with GUI
 License: MIT
 """
 
-__version__ = "1.0.0"
+__version__ = "1.0.1"
 
 import yt_dlp
 import tkinter as tk
