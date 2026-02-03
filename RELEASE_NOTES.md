@@ -1,6 +1,6 @@
 # YTDownloader4K - Release Notes
 
-## How to Use (Windows)
+## How to Use (Windows).
 
 1. **Download** `YTDownloader4k.exe` from the latest release
 2. **Double-click** the .exe file to run
