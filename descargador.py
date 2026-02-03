@@ -1,3 +1,12 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+YTDownloader4K - YouTube Video Downloader
+Author: Alejandro Zabaleta
+Description: A user-friendly YouTube downloader with GUI
+License: MIT
+"""
+
 import yt_dlp
 import tkinter as tk
 from tkinter import ttk, messagebox
