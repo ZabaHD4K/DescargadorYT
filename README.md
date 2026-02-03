@@ -3,10 +3,19 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python](https://img.shields.io/badge/python-3.7+-blue.svg)](https://www.python.org/downloads/)
 [![yt-dlp](https://img.shields.io/badge/powered%20by-yt--dlp-red)](https://github.com/yt-dlp/yt-dlp)
+[![Version](https://img.shields.io/badge/version-1.3.3-blue)](https://github.com/ZabaHD4K/DescargadorYT/releases)
 
 A powerful, user-friendly YouTube video downloader with a graphical interface built with Python. Download videos in multiple qualities or extract audio only - all with a simple, intuitive GUI.
 
 ![Application Preview](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey)
+
+> **🆕 What's New in v1.3.3:**  
+> ✅ Barra de progreso en tiempo real durante descarga  
+> ✅ Velocidad de descarga (MB/s)  
+> ✅ Tiempo estimado restante (formato inteligente)  
+> ✅ Indicador visual de procesamiento final  
+> 
+> [View Full Changelog](CHANGELOG.md)
 
 <div align="center">
 
@@ -24,11 +33,12 @@ A powerful, user-friendly YouTube video downloader with a graphical interface bu
 
 ## ✨ Features
 
-- 🎬 **Multiple Quality Options**: Maximum quality, 720p, or audio-only (MP3)
-- 🎵 **Audio Extraction**: Download and convert to MP3 with high quality
+- � **Smart Resolution Selector**: Load any video and see ALL available resolutions with codec details (VP9, AVC1, etc.)
+- 🖼️ **Video Preview**: See the video thumbnail before downloading
+- 📊 **Detailed Format Info**: View resolution, codec, and FPS for each available format- 📉 **Real-time Progress**: Download progress bar with speed and ETA- 🎵 **Audio Extraction**: Download and convert to MP3 with high quality
 - 🔄 **Auto-Update Notifications**: Alerts you when new versions are available with direct download link
-- 💾 **Smart Downloads**: Automatically saves to your Downloads folder
-- 🖥️ **User-Friendly GUI**: Clean, intuitive interface built with Tkinter
+- 💾 **Smart Downloads**: Automatically saves to your Downloads folder with resolution in filename
+- 🖥️ **User-Friendly GUI**: Clean, intuitive two-step interface (Load → Select → Download)
 - 🌍 **Geo-Bypass**: Attempts to bypass geographical restrictions
 - ⚡ **Fast & Reliable**: Powered by yt-dlp with retry mechanisms
 - 📦 **Portable & Standalone**: No installation needed - just download and run!
@@ -61,18 +71,22 @@ graph TD
     C -->|No| E[Launch Main GUI]
     D --> E
     E --> F[User Enters YouTube URL]
-    F --> G[User Selects Quality]
-    G --> H[Click Download Button]
-    H --> I{Validate URL}
-    I -->|Invalid| J[Show Warning]
-    I -->|Valid| K[Configure Download Options]
-    K --> L[Start Download]
-    L --> M{Download Success?}
-    M -->|Yes| N[Show Success Message]
-    M -->|No| O[Show Error Message]
-    J --> F
-    N --> P[File Saved to Downloads]
-    O --> F
+    F --> G[Click 'Cargar Video']
+    G --> H{Validate URL}
+    H -->|Invalid| I[Show Warning]
+    H -->|Valid| J[Extract Video Info]
+    J --> K[Download Thumbnail]
+    K --> L[Analyze Available Formats]
+    L --> M[Display Thumbnail & Resolutions]
+    M --> N[User Selects Specific Format]
+    N --> O[Click Download Button]
+    O --> P[Download Selected Format]
+    P --> Q{Download Success?}
+    Q -->|Yes| R[Show Success Message]
+    Q -->|No| S[Show Error Message]
+    I --> F
+    R --> T[File Saved to Downloads]
+    S --> F
 ```
 
 ### Download Process Architecture
@@ -86,10 +100,14 @@ sequenceDiagram
     participant FileSystem
 
     User->>GUI: Enter YouTube URL
-    User->>GUI: Select Quality
+    User->>GUI: Click 'Cargar Video'
+    GUI->>YT-DLP: Extract Video Info
+    YT-DLP->>GUI: Return Available Formats
+    GUI->>GUI: Download Thumbnail
+    GUI->>GUI: Display Preview & Format List
+    User->>GUI: Select Specific Format
     User->>GUI: Click Download
-    GUI->>GUI: Validate Input
-    GUI->>YT-DLP: Request Video/Audio
+    GUI->>YT-DLP: Request Selected Format
     YT-DLP->>YT-DLP: Fetch Media Streams
     
     alt Video + Audio
@@ -130,21 +148,29 @@ sequenceDiagram
     end
 ```
 
-### Quality Selection Logic
+### Dynamic Format Selection Logic
 
 ```mermaid
-flowchart LR
-    A[Quality Selection] --> B{User Choice}
-    B -->|Maximum Quality| C[bestvideo+bestaudio/best]
-    B -->|720p| D[video≤720p+bestaudio]
-    B -->|Audio Only| E[bestaudio only]
+flowchart TD
+    A[Load Video] --> B[Extract All Formats]
+    B --> C{Format Type}
     
-    C --> F[Merge to MP4]
-    D --> F
-    E --> G[Convert to MP3]
+    C -->|Video + Audio| D[Group by Resolution]
+    C -->|Audio Only| E[List Audio Formats]
     
-    F --> H[Save to Downloads]
-    G --> H
+    D --> F[Show: 2160p VP9 60fps]
+    D --> G[Show: 1080p AVC1 30fps]
+    D --> H[Show: 720p VP9 60fps]
+    
+    E --> I[Show: MP3 192kbps]
+    
+    F --> J[User Selects Format]
+    G --> J
+    H --> J
+    I --> J
+    
+    J --> K[Download Exact Format]
+    K --> L[Save to Downloads]
 ```
 
 ---
@@ -251,10 +277,11 @@ The application includes **update notification functionality**:
 
 1. **[Download YTDownloader4k.exe](https://github.com/ZabaHD4K/DescargadorYT/raw/main/dist/YTDownloader4k.exe)**
 2. **Double-click** the downloaded file (no installation needed!)
-3. **Enter** a YouTube URL
-4. **Select** your desired quality
-5. **Click Download**
-6. **Done!** Find your file in the Downloads folder
+3. **Enter** a YouTube URL and click **"Cargar Video"**
+4. **Preview** the video thumbnail and available formats
+5. **Select** your desired resolution from the dropdown
+6. **Click Download**
+7. **Done!** Find your file in the Downloads folder
 
 **That's it!** The app works immediately on any Windows PC without installing Python, FFmpeg, or any dependencies. Everything is included in the single executable.
 
@@ -270,45 +297,83 @@ python descargador.py
 1. **[Click here to download YTDownloader4k.exe](https://github.com/ZabaHD4K/DescargadorYT/raw/main/YTDownloader4k.exe)** directly from this repo
 2. Run `YTDownloader4k.exe` - **no installation required!**
 3. The app will notify you if updates are available
-4. Enter a YouTube URL
-5. Select your desired quality
-6. Click **Download**
-7. Find your file in the **Downloads** folder
+4. Enter a YouTube URL and click **"Cargar Video"**
+5. View the thumbnail and available formats
+6. Select your desired resolution
+7. Click **Download**
+8. Find your file in the **Downloads** folder
 
 **✅ Works on any Windows without installation** - All dependencies are bundled inside the .exe file
 
-### GUI Overview
+### GUI Overview (v1.3.3)
 
 ```
-┌─────────────────────────────────────────┐
-│   Descargador de YouTube                │
-│                                         │
-│   Introduce la URL del video:          │
-│   ┌───────────────────────────────────┐ │
-│   │ https://youtube.com/watch?v=...   │ │
-│   └───────────────────────────────────┘ │
-│                                         │
-│   Selecciona calidad:                   │
-│   ┌───────────────────────────────────┐ │
-│   │ Máxima calidad (video + audio)  ▼│ │
-│   └───────────────────────────────────┘ │
-│                                         │
-│          ┌─────────────┐               │
-│          │  Descargar  │               │
-│          └─────────────┘               │
-│                                         │
-│   Los archivos se guardarán en tu      │
-│   carpeta de Descargas                  │
-└─────────────────────────────────────────┘
+┌────────────────────────────────────────────┐
+│   YTDownloader4K v1.3.3                    │
+│   Descargador de YouTube 4K                │
+│                                            │
+│   URL del video:                           │
+│   ┌──────────────────────────────────────┐ │
+│   │ https://youtube.com/watch?v=...      │ │
+│   └──────────────────────────────────────┘ │
+│                                            │
+│          ┌─────────────┐                  │
+│          │ Cargar Video│                  │
+│          └─────────────┘                  │
+│                                            │
+│   ┌────────────────────────────────────┐  │
+│   │      [Video Thumbnail 160x90]      │  │
+│   └────────────────────────────────────┘  │
+│                                            │
+│   Resolución disponible:                   │
+│   ┌──────────────────────────────────────┐ │
+│   │ 2160p (vp9, 30fps)                 ▼│ │
+│   │ 2160p (av01, 30fps)                  │ │
+│   │ 1440p (vp9, 30fps)                   │ │
+│   │ 1080p (vp9, 30fps)                   │ │
+│   │ 720p (vp9, 30fps)                    │ │
+│   │ Solo Audio (MP3)                     │ │
+│   └──────────────────────────────────────┘ │
+│                                            │
+│          ┌─────────────┐                  │
+│          │  Descargar  │                  │
+│          └─────────────┘                  │
+│                                            │
+│   ┌──────────────────────────────────────┐ │
+│   │█████████████████████████           │ │
+│   └──────────────────────────────────────┘ │
+│   Descargando: 45.3% | 2.5 MB/s | 1m 23s  │
+│                                            │
+│   Carpeta: Descargas | Autor: Alejandro   │
+│                          Zabaleta          │
+└────────────────────────────────────────────┘
 ```
 
-### Quality Options Explained
+### Format Selection Guide
 
-| Option | Description | File Type | Use Case |
-|--------|-------------|-----------|----------|
-| **Máxima calidad** | Best available video + audio quality | MP4 | High-quality archival, 4K viewing |
-| **720p** | 720p video + high-quality audio | MP4 | Balanced quality/size, everyday use |
-| **Solo audio (MP3)** | Audio only, converted to MP3 | MP3 | Music, podcasts, audio-only content |
+| Resolution | Codec Options | FPS Options | File Size (approx) | Use Case |
+|------------|---------------|-------------|-------------------|----------|
+| **2160p (4K)** | VP9, AV01 | 30 (60 si disponible) | 1-7 GB | Ultra high quality, 4K displays |
+| **1440p (2K)** | VP9, AV01 | 30 (60 si disponible) | 500MB-3GB | High quality, gaming/editing |
+| **1080p (FHD)** | VP9, AV01, AVC1 | 30 (60 si disponible) | 200MB-1GB | Standard HD, everyday use |
+| **720p (HD)** | VP9, AV01, AVC1 | 30 (60 si disponible) | 100-500MB | Balanced quality/size |
+| **480p (SD)** | VP9, AV01, AVC1 | 30 | 50-200MB | Lower bandwidth |
+| **360p** | AVC1 | 30 | 30-100MB | Mobile/slow connections |
+| **240p** | VP9, AV01 | 30 | 20-50MB | Very low bandwidth |
+| **144p** | AVC1 | 30 | 10-30MB | Minimal bandwidth |
+| **Audio (MP3)** | 192kbps | - | 3-10MB | Music, podcasts |
+
+**🎯 Codec Guide:**
+- **VP9**: Google's codec, good compression, wide support
+- **AV01**: Newest codec, best compression, smaller files
+- **AVC1 (H.264)**: Universal compatibility, larger files
+
+**📹 FPS Note:**
+- Most videos are recorded at **30fps** (standard)
+- Gaming/sports videos may offer **60fps** for smoother motion
+- The app shows exactly what YouTube provides for each specific video
+
+**Note**: Available formats vary by video. The app automatically detects and shows ALL formats available for your specific video, including all codec variants and FPS options.
 
 ---
 
@@ -373,16 +438,18 @@ pyinstaller \
 ```
 YTDownloader4k/
 ├── YTDownloader4k.exe      # ⭐ Ready-to-use executable (download this!)
-├── version.txt             # Current version for update checks
+├── version.txt             # Current version for update checks (1.3.3)
 ├── README.md               # This file
+├── CHANGELOG.md            # Version history and changes
+├── .gitignore              # Git ignore rules
 └── src/                    # Source code folder
     ├── descargador.py      # Main application source code
-    ├── requirements.txt    # Python dependencies
+    ├── requirements.txt    # Python dependencies (yt-dlp, pillow)
     ├── icon.ico            # Application icon
     ├── YTDownloader4k.spec # PyInstaller configuration
     ├── build/              # Build artifacts (git ignored)
     └── dist/               # Compiled outputs (git ignored)
-    └── YTDownloader4k.exe
+        └── YTDownloader4k.exe
 ```
 
 ---
@@ -396,20 +463,24 @@ graph LR
     A[YTDownloader4K] --> B[yt-dlp]
     A --> C[Tkinter]
     A --> D[FFmpeg]
+    A --> E[Pillow]
     
-    B --> E[Video Download Engine]
-    C --> F[GUI Framework]
-    D --> G[Audio/Video Processing]
+    B --> F[Video Download Engine]
+    C --> G[GUI Framework]
+    D --> H[Audio/Video Processing]
+    E --> I[Image/Thumbnail Handling]
     
     style A fill:#d32f2f,color:#fff
     style B fill:#e57373,color:#fff
     style C fill:#81c784,color:#fff
     style D fill:#64b5f6,color:#fff
+    style E fill:#ba68c8,color:#fff
 ```
 
 - **[yt-dlp](https://github.com/yt-dlp/yt-dlp)**: Modern YouTube downloader and fork of youtube-dl
 - **[Tkinter](https://docs.python.org/3/library/tkinter.html)**: Python's standard GUI library
 - **[FFmpeg](https://ffmpeg.org/)**: Multimedia framework for audio/video processing
+- **[Pillow](https://python-pillow.org/)**: Python Imaging Library for thumbnail display
 
 ---
 

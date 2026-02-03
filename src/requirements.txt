@@ -1,2 +1,3 @@
 yt-dlp
+pillow
 # Nota: ffmpeg no se instala vía pip. Instala ffmpeg en el sistema (https://ffmpeg.org/) para que la extracción/conversión funcione.
