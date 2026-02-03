@@ -7,7 +7,7 @@ Description: A user-friendly YouTube downloader with GUI
 License: MIT
 """
 
-__version__ = "1.0.2"
+__version__ = "1.0.3"
 
 import yt_dlp
 import tkinter as tk
@@ -19,6 +19,27 @@ import threading
 import urllib.request
 import json
 import webbrowser
+import sys
+from pathlib import Path
+
+
+# Evitar múltiples instancias
+def instancia_unica():
+    """Verifica que solo haya una instancia de la aplicación ejecutándose."""
+    if getattr(sys, 'frozen', False):
+        import tempfile
+        lock_file = Path(tempfile.gettempdir()) / "ytdownloader4k.lock"
+        
+        if lock_file.exists():
+            # Ya hay una instancia ejecutándose
+            sys.exit(0)
+        else:
+            # Crear archivo lock
+            lock_file.touch()
+            import atexit
+            atexit.register(lambda: lock_file.unlink(missing_ok=True))
+
+instancia_unica()
 
 
 def verificar_actualizacion_app():
