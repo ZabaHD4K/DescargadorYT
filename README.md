@@ -12,11 +12,11 @@ A powerful, user-friendly YouTube video downloader with a graphical interface bu
 
 ## 📥 Quick Download
 
-### **[⬇️ Download YTDownloader4k.exe (Windows)](https://github.com/ZabaHD4K/DescargadorYT/raw/main/dist/YTDownloader4k.exe)**
+### **[⬇️ Download YTDownloader4k.exe (Windows)](https://github.com/ZabaHD4K/DescargadorYT/raw/main/YTDownloader4k.exe)**
 
-**✨ No installation required • Works on any Windows PC • Auto-updates**
+**✨ No installation required • Works on any Windows PC • Auto-update notifications**
 
-[View All Releases](https://github.com/ZabaHD4K/DescargadorYT/releases) | [Download Source Code](#-installation)
+[Download Source Code](#-installation)
 
 </div>
 
@@ -26,7 +26,7 @@ A powerful, user-friendly YouTube video downloader with a graphical interface bu
 
 - 🎬 **Multiple Quality Options**: Maximum quality, 720p, or audio-only (MP3)
 - 🎵 **Audio Extraction**: Download and convert to MP3 with high quality
-- 🔄 **Auto-Update**: Automatically checks and updates `yt-dlp` library and **the application itself** from GitHub releases
+- 🔄 **Auto-Update Notifications**: Alerts you when new versions are available with direct download link
 - 💾 **Smart Downloads**: Automatically saves to your Downloads folder
 - 🖥️ **User-Friendly GUI**: Clean, intuitive interface built with Tkinter
 - 🌍 **Geo-Bypass**: Attempts to bypass geographical restrictions
@@ -222,26 +222,26 @@ python descargador.py
 
 ## 🔄 Auto-Update Feature
 
-The application includes **automatic update functionality** that keeps your software current:
+The application includes **update notification functionality**:
 
 ### How It Works
 
-1. **On Startup**: The app checks GitHub for the latest release
+1. **On Startup**: The app checks GitHub's `version.txt` for the latest version
 2. **Version Comparison**: Compares your version with the latest available
-3. **Update Prompt**: If a new version exists, you'll see a dialog with options:
-   - ✅ **Update**: Downloads and installs the new version automatically
+3. **Update Notification**: If a new version exists, you'll see a dialog with:
+   - ✅ **Download Update**: Opens your browser to download the new .exe
    - ⏭️ **Skip**: Continue with current version
-4. **Seamless Installation**: The app downloads, replaces itself, and restarts
-5. **Always Current**: Your dependencies (`yt-dlp`) are also kept up-to-date
+4. **Simple Update**: Download the new .exe and replace the old one
+5. **Library Updates**: Your dependencies (`yt-dlp`) are also kept up-to-date automatically
 
 ### Benefits
 
-- 🚀 **No manual downloads** - Updates happen in one click
-- 🛡️ **Bug fixes** - Get security and stability improvements immediately
-- ✨ **New features** - Access the latest functionality as soon as it's released
-- 📦 **Zero hassle** - The entire process is handled automatically
+- 🔔 **Stay informed** - Know when updates are available
+- 🛡️ **Bug fixes** - Get security and stability improvements
+- ✨ **New features** - Access the latest functionality
+- 📦 **User control** - You decide when to update
 
-**Note**: Auto-update only works with the compiled executable (.exe), not when running from Python source.
+**Note**: Update notifications only work with the compiled executable (.exe), not when running from Python source.
 
 ---
 
@@ -267,15 +267,13 @@ python descargador.py
 ### Using the Executable (Windows)
 
 **Quick Download:**
-1. **[Click here to download YTDownloader4k.exe](https://github.com/ZabaHD4K/DescargadorYT/raw/main/dist/YTDownloader4k.exe)** directly from this repo
+1. **[Click here to download YTDownloader4k.exe](https://github.com/ZabaHD4K/DescargadorYT/raw/main/YTDownloader4k.exe)** directly from this repo
 2. Run `YTDownloader4k.exe` - **no installation required!**
-3. The app will auto-update to the latest version on startup
+3. The app will notify you if updates are available
 4. Enter a YouTube URL
 5. Select your desired quality
 6. Click **Download**
 7. Find your file in the **Downloads** folder
-
-**Alternative:** Download from the [Releases page](https://github.com/ZabaHD4K/DescargadorYT/releases/latest) for specific versions
 
 **✅ Works on any Windows without installation** - All dependencies are bundled inside the .exe file
 
@@ -343,13 +341,18 @@ python descargador.py
 To create a standalone executable using PyInstaller:
 
 ```bash
+# Navigate to src folder
+cd src
+
 # Install PyInstaller
 pip install pyinstaller
 
 # Build the executable
-pyinstaller --onefile --windowed --name YTDownloader4k descargador.py
+pyinstaller --onefile --windowed --name YTDownloader4k --icon=icon.ico descargador.py
 
-# The executable will be in the 'dist' folder
+# The executable will be in the 'src/dist' folder
+# Copy it to the root
+copy dist\YTDownloader4k.exe ..
 ```
 
 ### Build Options Explained
@@ -359,7 +362,7 @@ pyinstaller \
     --onefile \              # Create a single executable file
     --windowed \             # No console window (GUI only)
     --name YTDownloader4k \  # Name of the executable
-    --icon=icon.ico \        # (Optional) Add custom icon
+    --icon=icon.ico \        # Add custom icon
     descargador.py           # Source Python file
 ```
 
@@ -369,22 +372,16 @@ pyinstaller \
 
 ```
 YTDownloader4k/
-├── descargador.py          # Main application source code
-├── requirements.txt        # Python dependencies
-├── YTDownloader4k.spec     # PyInstaller configuration
+├── YTDownloader4k.exe      # ⭐ Ready-to-use executable (download this!)
+├── version.txt             # Current version for update checks
 ├── README.md               # This file
-├── __pycache__/            # Python cache files
-├── build/                  # Build artifacts (PyInstaller)
-│   └── YTDownloader4k/
-│       ├── Analysis-00.toc
-│       ├── EXE-00.toc
-│       ├── PKG-00.toc
-│       ├── PYZ-00.pyz
-│       ├── PYZ-00.toc
-│       ├── warn-YTDownloader4k.txt
-│       ├── xref-YTDownloader4k.html
-│       └── localpycs/
-└── dist/                   # Compiled executable (after build)
+└── src/                    # Source code folder
+    ├── descargador.py      # Main application source code
+    ├── requirements.txt    # Python dependencies
+    ├── icon.ico            # Application icon
+    ├── YTDownloader4k.spec # PyInstaller configuration
+    ├── build/              # Build artifacts (git ignored)
+    └── dist/               # Compiled outputs (git ignored)
     └── YTDownloader4k.exe
 ```
 
