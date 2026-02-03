@@ -7,7 +7,7 @@ Description: A user-friendly YouTube downloader with GUI
 License: MIT
 """
 
-__version__ = "1.0.1"
+__version__ = "1.0.2"
 
 import yt_dlp
 import tkinter as tk
@@ -24,8 +24,8 @@ import webbrowser
 def verificar_actualizacion_app():
     """Verifica si hay una nueva versión disponible en GitHub."""
     GITHUB_REPO = "ZabaHD4K/DescargadorYT"
-    GITHUB_API_URL = f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest"
-    DOWNLOAD_URL = f"https://github.com/{GITHUB_REPO}/releases/latest"
+    VERSION_URL = f"https://raw.githubusercontent.com/{GITHUB_REPO}/main/version.txt"
+    DOWNLOAD_URL = f"https://github.com/{GITHUB_REPO}/raw/main/YTDownloader4k.exe"
     
     # Solo verificar si se está ejecutando como .exe
     if not getattr(sys, 'frozen', False):
@@ -33,12 +33,11 @@ def verificar_actualizacion_app():
     
     try:
         # Obtener la última versión desde GitHub
-        req = urllib.request.Request(GITHUB_API_URL)
+        req = urllib.request.Request(VERSION_URL)
         req.add_header('User-Agent', 'YTDownloader4K')
         
         with urllib.request.urlopen(req, timeout=5) as response:
-            data = json.loads(response.read().decode())
-            latest_version = data['tag_name'].lstrip('v')
+            latest_version = response.read().decode().strip()
             current_version = __version__
             
             # Comparar versiones
