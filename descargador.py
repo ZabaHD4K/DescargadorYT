@@ -7,6 +7,8 @@ Description: A user-friendly YouTube downloader with GUI
 License: MIT
 """
 
+__version__ = "1.0.0"
+
 import yt_dlp
 import tkinter as tk
 from tkinter import ttk, messagebox
@@ -14,6 +16,142 @@ import os
 import subprocess
 import sys
 import threading
+import urllib.request
+import json
+import shutil
+import tempfile
+
+
+def verificar_actualizacion_app():
+    """Verifica si hay una nueva versión disponible en GitHub y la descarga."""
+    GITHUB_REPO = "ZabaHD4K/DescargadorYT"
+    GITHUB_API_URL = f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest"
+    
+    # Solo actualizar si se está ejecutando como .exe
+    if not getattr(sys, 'frozen', False):
+        return  # No hacer nada si se ejecuta desde Python directamente
+    
+    try:
+        # Obtener la última versión desde GitHub
+        req = urllib.request.Request(GITHUB_API_URL)
+        req.add_header('User-Agent', 'YTDownloader4K')
+        
+        with urllib.request.urlopen(req, timeout=5) as response:
+            data = json.loads(response.read().decode())
+            latest_version = data['tag_name'].lstrip('v')
+            current_version = __version__
+            
+            # Comparar versiones
+            if latest_version != current_version:
+                # Hay una nueva versión disponible
+                ventana_update = tk.Tk()
+                ventana_update.title("Actualización disponible")
+                ventana_update.geometry("450x180")
+                ventana_update.resizable(False, False)
+                ventana_update.eval('tk::PlaceWindow . center')
+                
+                tk.Label(
+                    ventana_update,
+                    text=f"Nueva versión disponible: v{latest_version}",
+                    font=("Arial", 12, "bold")
+                ).pack(pady=15)
+                
+                tk.Label(
+                    ventana_update,
+                    text=f"Versión actual: v{current_version}",
+                    font=("Arial", 10)
+                ).pack(pady=5)
+                
+                label_estado = tk.Label(
+                    ventana_update,
+                    text="¿Descargar e instalar ahora?",
+                    font=("Arial", 10)
+                )
+                label_estado.pack(pady=10)
+                
+                def descargar_actualizar():
+                    label_estado.config(text="Descargando actualización...")
+                    ventana_update.update()
+                    
+                    try:
+                        # Buscar el asset .exe en el release
+                        exe_url = None
+                        for asset in data.get('assets', []):
+                            if asset['name'].endswith('.exe'):
+                                exe_url = asset['browser_download_url']
+                                break
+                        
+                        if not exe_url:
+                            raise Exception("No se encontró el ejecutable en el release")
+                        
+                        # Descargar el nuevo .exe a un archivo temporal
+                        temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.exe')
+                        temp_file.close()
+                        
+                        urllib.request.urlretrieve(exe_url, temp_file.name)
+                        
+                        # Obtener la ruta del ejecutable actual
+                        current_exe = sys.executable
+                        backup_exe = current_exe + '.old'
+                        
+                        # Crear un script batch para reemplazar el ejecutable
+                        batch_script = f'''
+@echo off
+ping 127.0.0.1 -n 2 > nul
+del /F /Q "{backup_exe}" 2>nul
+move /Y "{current_exe}" "{backup_exe}"
+move /Y "{temp_file.name}" "{current_exe}"
+start "" "{current_exe}"
+del "%~f0"
+'''
+                        
+                        batch_file = tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.bat')
+                        batch_file.write(batch_script)
+                        batch_file.close()
+                        
+                        label_estado.config(text="Instalando actualización...")
+                        ventana_update.update()
+                        ventana_update.after(500)
+                        
+                        # Ejecutar el script y cerrar la aplicación
+                        subprocess.Popen([batch_file.name], shell=True)
+                        sys.exit(0)
+                        
+                    except Exception as e:
+                        label_estado.config(text=f"Error: {str(e)[:40]}", fg="red")
+                        ventana_update.after(3000, ventana_update.destroy)
+                
+                def omitir():
+                    ventana_update.destroy()
+                
+                frame_botones = tk.Frame(ventana_update)
+                frame_botones.pack(pady=10)
+                
+                tk.Button(
+                    frame_botones,
+                    text="Actualizar",
+                    command=descargar_actualizar,
+                    bg="#4CAF50",
+                    fg="white",
+                    font=("Arial", 10, "bold"),
+                    width=12
+                ).pack(side="left", padx=5)
+                
+                tk.Button(
+                    frame_botones,
+                    text="Omitir",
+                    command=omitir,
+                    bg="#757575",
+                    fg="white",
+                    font=("Arial", 10),
+                    width=12
+                ).pack(side="left", padx=5)
+                
+                ventana_update.mainloop()
+                
+    except Exception as e:
+        # Si hay algún error al verificar, simplemente continuar sin actualizar
+        pass
 
 
 def verificar_actualizaciones():
@@ -128,7 +266,10 @@ def verificar_actualizaciones():
     ventana_actualizacion.mainloop()
 
 
-# Ejecutar verificación de actualizaciones al iniciar
+# Ejecutar verificación de actualizaciones de la aplicación
+verificar_actualizacion_app()
+
+# Ejecutar verificación de actualizaciones de librerías
 verificar_actualizaciones()
 
 
@@ -152,6 +293,15 @@ def descargar_video():
         formato = "bestvideo[height<=720]+bestaudio/best"
         merge_format = "mp4"
 
+    # Configurar ruta de FFmpeg si está bundleado en el ejecutable
+    ffmpeg_location = None
+    if getattr(sys, 'frozen', False):
+        # Ejecutando como .exe - buscar FFmpeg en el directorio temporal de PyInstaller
+        base_path = sys._MEIPASS
+        ffmpeg_path = os.path.join(base_path, 'ffmpeg.exe')
+        if os.path.exists(ffmpeg_path):
+            ffmpeg_location = base_path
+
     opciones = {
         "format": formato,
         "merge_output_format": merge_format,
@@ -163,6 +313,10 @@ def descargar_video():
         "geo_bypass": True,  # Intenta eludir restricciones geográficas
         "extractor_retries": 3,  # Reintentos en caso de fallo
     }
+
+    # Añadir ubicación de FFmpeg si está disponible
+    if ffmpeg_location:
+        opciones["ffmpeg_location"] = ffmpeg_location
 
     if calidad == "Solo audio (MP3)":
         opciones["postprocessors"].append({

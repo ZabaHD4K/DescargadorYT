@@ -8,17 +8,31 @@ A powerful, user-friendly YouTube video downloader with a graphical interface bu
 
 ![Application Preview](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey)
 
+<div align="center">
+
+## 📥 Quick Download
+
+### **[⬇️ Download YTDownloader4k.exe (Windows)](https://github.com/ZabaHD4K/DescargadorYT/raw/main/dist/YTDownloader4k.exe)**
+
+**✨ No installation required • Works on any Windows PC • Auto-updates**
+
+[View All Releases](https://github.com/ZabaHD4K/DescargadorYT/releases) | [Download Source Code](#-installation)
+
+</div>
+
 ---
 
 ## ✨ Features
 
 - 🎬 **Multiple Quality Options**: Maximum quality, 720p, or audio-only (MP3)
 - 🎵 **Audio Extraction**: Download and convert to MP3 with high quality
-- 🔄 **Auto-Update**: Automatically checks and updates `yt-dlp` library
+- 🔄 **Auto-Update**: Automatically checks and updates `yt-dlp` library and **the application itself** from GitHub releases
 - 💾 **Smart Downloads**: Automatically saves to your Downloads folder
 - 🖥️ **User-Friendly GUI**: Clean, intuitive interface built with Tkinter
 - 🌍 **Geo-Bypass**: Attempts to bypass geographical restrictions
 - ⚡ **Fast & Reliable**: Powered by yt-dlp with retry mechanisms
+- 📦 **Portable & Standalone**: No installation needed - just download and run!
+- 🪟 **Universal Windows Support**: Works on Windows 7, 8, 10, and 11 without any dependencies
 
 ---
 
@@ -93,6 +107,29 @@ sequenceDiagram
     GUI->>User: Show Success Message
 ```
 
+### Auto-Update Process
+
+```mermaid
+sequenceDiagram
+    participant App
+    participant GitHub
+    participant User
+
+    App->>GitHub: Check latest release version
+    GitHub-->>App: Return latest version info
+    
+    alt New Version Available
+        App->>User: Show update dialog
+        User->>App: Click "Update"
+        App->>GitHub: Download new .exe
+        GitHub-->>App: Send new executable
+        App->>App: Replace old .exe
+        App->>App: Restart application
+    else No Update
+        App->>App: Continue normally
+    end
+```
+
 ### Quality Selection Logic
 
 ```mermaid
@@ -114,7 +151,28 @@ flowchart LR
 
 ## 💻 Installation
 
-### Prerequisites
+### 🪟 Windows Users (Easiest - Recommended)
+
+**No installation required!** Just download and run:
+
+1. **[⬇️ Download YTDownloader4k.exe](https://github.com/ZabaHD4K/DescargadorYT/raw/main/dist/YTDownloader4k.exe)**
+2. **Double-click** to run
+3. **Start downloading!**
+
+✅ **Everything is included**: Python, yt-dlp, FFmpeg, and all dependencies are bundled inside the executable.  
+✅ **Works immediately** on Windows 7/8/10/11 without installing anything.  
+✅ **Portable**: Run it from anywhere - USB drive, desktop, or any folder.  
+✅ **No admin rights needed**: Works on restricted computers.
+
+---
+
+### 🐍 Advanced: Install from Source
+
+Only for developers or advanced users who want to run from Python source code.
+
+#### Prerequisites
+
+**Note:** These are only needed if running from Python source. The Windows .exe has everything included!
 
 Before installation, ensure you have:
 
@@ -162,23 +220,64 @@ python descargador.py
 
 ---
 
+## 🔄 Auto-Update Feature
+
+The application includes **automatic update functionality** that keeps your software current:
+
+### How It Works
+
+1. **On Startup**: The app checks GitHub for the latest release
+2. **Version Comparison**: Compares your version with the latest available
+3. **Update Prompt**: If a new version exists, you'll see a dialog with options:
+   - ✅ **Update**: Downloads and installs the new version automatically
+   - ⏭️ **Skip**: Continue with current version
+4. **Seamless Installation**: The app downloads, replaces itself, and restarts
+5. **Always Current**: Your dependencies (`yt-dlp`) are also kept up-to-date
+
+### Benefits
+
+- 🚀 **No manual downloads** - Updates happen in one click
+- 🛡️ **Bug fixes** - Get security and stability improvements immediately
+- ✨ **New features** - Access the latest functionality as soon as it's released
+- 📦 **Zero hassle** - The entire process is handled automatically
+
+**Note**: Auto-update only works with the compiled executable (.exe), not when running from Python source.
+
+---
+
 ## 🚀 Usage
 
-### Running from Source
+### Quick Start (Windows - No Installation Required!)
+
+1. **[Download YTDownloader4k.exe](https://github.com/ZabaHD4K/DescargadorYT/raw/main/dist/YTDownloader4k.exe)**
+2. **Double-click** the downloaded file (no installation needed!)
+3. **Enter** a YouTube URL
+4. **Select** your desired quality
+5. **Click Download**
+6. **Done!** Find your file in the Downloads folder
+
+**That's it!** The app works immediately on any Windows PC without installing Python, FFmpeg, or any dependencies. Everything is included in the single executable.
+
+### Running from Source (Advanced Users)
 
 ```bash
 python descargador.py
 ```
 
-### Using the Executable
+### Using the Executable (Windows)
 
-1. Download the latest release from the [Releases page](#)
-2. Extract the ZIP file
-3. Run `YTDownloader4k.exe` (Windows) or the appropriate executable for your OS
+**Quick Download:**
+1. **[Click here to download YTDownloader4k.exe](https://github.com/ZabaHD4K/DescargadorYT/raw/main/dist/YTDownloader4k.exe)** directly from this repo
+2. Run `YTDownloader4k.exe` - **no installation required!**
+3. The app will auto-update to the latest version on startup
 4. Enter a YouTube URL
 5. Select your desired quality
 6. Click **Download**
 7. Find your file in the **Downloads** folder
+
+**Alternative:** Download from the [Releases page](https://github.com/ZabaHD4K/DescargadorYT/releases/latest) for specific versions
+
+**✅ Works on any Windows without installation** - All dependencies are bundled inside the .exe file
 
 ### GUI Overview
 
@@ -217,7 +316,14 @@ python descargador.py
 
 ## 🖥️ System Requirements
 
-### Minimum Requirements
+### For Windows Executable (Recommended)
+- **OS**: Windows 7, 8, 10, or 11 (32-bit or 64-bit)
+- **RAM**: 512 MB minimum
+- **Storage**: 100 MB + space for downloads
+- **Internet**: Stable connection required
+- **NO INSTALLATION REQUIRED** - Everything is bundled in the .exe
+
+### For Running from Source (Advanced)
 - **OS**: Windows 7+, macOS 10.12+, or Linux
 - **Python**: 3.7 or higher
 - **RAM**: 512 MB
