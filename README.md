@@ -3,17 +3,18 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python](https://img.shields.io/badge/python-3.7+-blue.svg)](https://www.python.org/downloads/)
 [![yt-dlp](https://img.shields.io/badge/powered%20by-yt--dlp-red)](https://github.com/yt-dlp/yt-dlp)
-[![Version](https://img.shields.io/badge/version-1.3.3-blue)](https://github.com/ZabaHD4K/DescargadorYT/releases)
+[![Version](https://img.shields.io/badge/version-1.4.0-blue)](https://github.com/ZabaHD4K/DescargadorYT/releases)
 
 A powerful, user-friendly YouTube video downloader with a graphical interface built with Python. Download videos in multiple qualities or extract audio only - all with a simple, intuitive GUI.
 
 ![Application Preview](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey)
 
-> **🆕 What's New in v1.3.3:**  
-> ✅ Barra de progreso en tiempo real durante descarga  
-> ✅ Velocidad de descarga (MB/s)  
-> ✅ Tiempo estimado restante (formato inteligente)  
-> ✅ Indicador visual de procesamiento final  
+> **🆕 What's New in v1.4.0:**  
+> ✅ Real-time progress bar during download  
+> ✅ Video preview with thumbnail before downloading  
+> ✅ Choose from all available resolutions and codecs  
+> ✅ Visual processing indicator at completion  
+> ✅ Full English interface
 > 
 > [View Full Changelog](CHANGELOG.md)
 
@@ -33,9 +34,11 @@ A powerful, user-friendly YouTube video downloader with a graphical interface bu
 
 ## ✨ Features
 
-- � **Smart Resolution Selector**: Load any video and see ALL available resolutions with codec details (VP9, AVC1, etc.)
+- 🎯 **Smart Resolution Selector**: Load any video and see ALL available resolutions with codec details (VP9, AVC1, etc.)
 - 🖼️ **Video Preview**: See the video thumbnail before downloading
-- 📊 **Detailed Format Info**: View resolution, codec, and FPS for each available format- 📉 **Real-time Progress**: Download progress bar with speed and ETA- 🎵 **Audio Extraction**: Download and convert to MP3 with high quality
+- 📊 **Detailed Format Info**: View resolution, codec, and FPS for each available format
+- 📉 **Real-time Progress**: Download progress bar with speed and ETA
+- 🎵 **Audio Extraction**: Download and convert to MP3 with high quality
 - 🔄 **Auto-Update Notifications**: Alerts you when new versions are available with direct download link
 - 💾 **Smart Downloads**: Automatically saves to your Downloads folder with resolution in filename
 - 🖥️ **User-Friendly GUI**: Clean, intuitive two-step interface (Load → Select → Download)
@@ -305,46 +308,46 @@ python descargador.py
 
 **✅ Works on any Windows without installation** - All dependencies are bundled inside the .exe file
 
-### GUI Overview (v1.3.3)
+### GUI Overview (v1.4.0)
 
 ```
 ┌────────────────────────────────────────────┐
-│   YTDownloader4K v1.3.3                    │
-│   Descargador de YouTube 4K                │
+│   YTDownloader4K v1.4.0                    │
+│   YouTube 4K Downloader                    │
 │                                            │
-│   URL del video:                           │
+│   Video URL:                               │
 │   ┌──────────────────────────────────────┐ │
 │   │ https://youtube.com/watch?v=...      │ │
 │   └──────────────────────────────────────┘ │
 │                                            │
 │          ┌─────────────┐                  │
-│          │ Cargar Video│                  │
+│          │ Load Video  │                  │
 │          └─────────────┘                  │
 │                                            │
 │   ┌────────────────────────────────────┐  │
 │   │      [Video Thumbnail 160x90]      │  │
 │   └────────────────────────────────────┘  │
 │                                            │
-│   Resolución disponible:                   │
+│   Available resolution:                    │
 │   ┌──────────────────────────────────────┐ │
 │   │ 2160p (vp9, 30fps)                 ▼│ │
 │   │ 2160p (av01, 30fps)                  │ │
 │   │ 1440p (vp9, 30fps)                   │ │
 │   │ 1080p (vp9, 30fps)                   │ │
 │   │ 720p (vp9, 30fps)                    │ │
-│   │ Solo Audio (MP3)                     │ │
+│   │ Audio Only (MP3)                     │ │
 │   └──────────────────────────────────────┘ │
 │                                            │
 │          ┌─────────────┐                  │
-│          │  Descargar  │                  │
+│          │  Download   │                  │
 │          └─────────────┘                  │
 │                                            │
 │   ┌──────────────────────────────────────┐ │
 │   │█████████████████████████           │ │
 │   └──────────────────────────────────────┘ │
-│   Descargando: 45.3% | 2.5 MB/s | 1m 23s  │
+│   Downloading: 45.3% | 2.5 MB/s | 1m 23s  │
 │                                            │
-│   Carpeta: Descargas | Autor: Alejandro   │
+│   Folder: Downloads | Author: Alejandro   │
 │                          Zabaleta          │
 └────────────────────────────────────────────┘
 ```
@@ -353,10 +356,10 @@ python descargador.py
 
 | Resolution | Codec Options | FPS Options | File Size (approx) | Use Case |
 |------------|---------------|-------------|-------------------|----------|
-| **2160p (4K)** | VP9, AV01 | 30 (60 si disponible) | 1-7 GB | Ultra high quality, 4K displays |
-| **1440p (2K)** | VP9, AV01 | 30 (60 si disponible) | 500MB-3GB | High quality, gaming/editing |
-| **1080p (FHD)** | VP9, AV01, AVC1 | 30 (60 si disponible) | 200MB-1GB | Standard HD, everyday use |
-| **720p (HD)** | VP9, AV01, AVC1 | 30 (60 si disponible) | 100-500MB | Balanced quality/size |
+| **2160p (4K)** | VP9, AV01 | 30 (60 if available) | 1-7 GB | Ultra high quality, 4K displays |
+| **1440p (2K)** | VP9, AV01 | 30 (60 if available) | 500MB-3GB | High quality, gaming/editing |
+| **1080p (FHD)** | VP9, AV01, AVC1 | 30 (60 if available) | 200MB-1GB | Standard HD, everyday use |
+| **720p (HD)** | VP9, AV01, AVC1 | 30 (60 if available) | 100-500MB | Balanced quality/size |
 | **480p (SD)** | VP9, AV01, AVC1 | 30 | 50-200MB | Lower bandwidth |
 | **360p** | AVC1 | 30 | 30-100MB | Mobile/slow connections |
 | **240p** | VP9, AV01 | 30 | 20-50MB | Very low bandwidth |
@@ -569,7 +572,7 @@ python descargador.py
 
 ---
 
-## � Author
+## 👤 Author
 
 **Alejandro Zabaleta**
 

@@ -1,29 +1,50 @@
 # 📝 Changelog
 
-Todos los cambios notables de este proyecto serán documentados en este archivo.
+All notable changes to this project will be documented in this file.
 
-El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/),
-y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/).
+
+---
+
+## [1.4.0] - 2026-02-03
+
+### ✨ Added
+- **Full English interface**: Complete translation of the application to English
+- **Real-time progress bar**: Shows exact download progress with continuously updated percentage
+- **Download speed indicator**: Displays current download speed in MB/s
+- **Estimated time remaining**: Shows time left to complete download in smart format (minutes and seconds)
+- **Processing indicator**: Visual message when processing the final file after download
+- **Enhanced progress hook**: Callback system that updates the interface in real-time with detailed information
+
+### 🔧 Improved
+- Interface now displays detailed information throughout the entire download process
+- Better visual feedback for users with informative messages
+- Progress bar update optimization to prevent flickering
+
+### 🐛 Fixed
+- Better handling of cases where estimated time information is unavailable
+- Correction in percentage calculation when only total bytes estimation is available
 
 ---
 
 ## [1.3.3] - 2026-02-03
 
-### ✨ Añadido
-- **Barra de progreso en tiempo real**: Ahora puedes ver el progreso exacto de la descarga con porcentaje actualizado continuamente
-- **Velocidad de descarga**: Indicador de velocidad en MB/s durante la descarga
-- **Tiempo estimado restante**: Muestra el tiempo que falta para completar la descarga en formato inteligente (minutos y segundos)
-- **Indicador de procesamiento**: Mensaje visual cuando se está procesando el archivo final después de la descarga
-- **Hook de progreso mejorado**: Sistema de callbacks que actualiza la interfaz en tiempo real con información detallada
+### ✨ Added
+- Real-time progress bar during download
+- Download speed indicator (MB/s)
+- Estimated time remaining (smart format)
+- Visual processing indicator at completion
+- Enhanced progress hook system
 
-### 🔧 Mejorado
-- La interfaz ahora muestra información detallada durante todo el proceso de descarga
-- Mejor feedback visual para el usuario con mensajes informativos
-- Optimización de la actualización de la barra de progreso para evitar parpadeos
+### 🔧 Improved
+- Interface shows detailed information during the entire download process
+- Better visual feedback with informative messages
+- Optimized progress bar updates
 
-### 🐛 Corregido
-- Mejor manejo de casos donde no hay información de tiempo estimado disponible
-- Corrección en el cálculo del porcentaje cuando solo hay estimación de bytes totales
+### 🐛 Fixed
+- Better handling when ETA information is unavailable
+- Fixed percentage calculation with byte estimation
 
 ---
 
