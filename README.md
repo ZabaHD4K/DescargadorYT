@@ -577,27 +577,12 @@ Feel free to reach out for questions, suggestions, or collaborations!
 
 ---
 
-## �📞 Support
-
-- 📧 **Email**: support@example.com
-- 🐛 **Issues**: [GitHub Issues](https://github.com/yourusername/YTDownloader4k/issues)
-- 💬 **Discussions**: [GitHub Discussions](https://github.com/yourusername/YTDownloader4k/discussions)
-
----
 
 ## 🌟 Acknowledgments
 
 - Thanks to the [yt-dlp](https://github.com/yt-dlp/yt-dlp) team for the amazing download engine
 - Thanks to the [FFmpeg](https://ffmpeg.org/) project for media processing capabilities
 - Built with ❤️ by **Alejandro Zabaleta** using Python and Tkinter
-
----
-
-## 📊 Project Status
-
-![GitHub last commit](https://img.shields.io/github/last-commit/yourusername/YTDownloader4k)
-![GitHub issues](https://img.shields.io/github/issues/yourusername/YTDownloader4k)
-![GitHub stars](https://img.shields.io/github/stars/yourusername/YTDownloader4k?style=social)
 
 ---
 
