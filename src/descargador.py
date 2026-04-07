@@ -7,7 +7,7 @@ Description: A user-friendly YouTube downloader with GUI
 License: MIT
 """
 
-__version__ = "1.6.0"
+__version__ = "1.6.1"
 
 import yt_dlp
 import tkinter as tk
@@ -520,6 +520,24 @@ def cargar_video():
     combo_resolucion.set("")
     combo_resolucion["values"] = []
 
+    # Contador visual para que el usuario sepa que sigue trabajando
+    cargando = [True]
+
+    def actualizar_contador():
+        segundos = 0
+        while cargando[0]:
+            try:
+                btn_cargar.config(text=f"Loading... ({segundos}s)")
+                root.update_idletasks()
+            except Exception:
+                break
+            import time
+            time.sleep(1)
+            segundos += 1
+
+    hilo_contador = threading.Thread(target=actualizar_contador, daemon=True)
+    hilo_contador.start()
+
     def cargar():
         global formatos_disponibles, info_video
         try:
@@ -528,12 +546,12 @@ def cargar_video():
                 "no_warnings": True,
                 "nocheckcertificate": True,
                 "geo_bypass": True,
-                "socket_timeout": 15,
-                "extractor_retries": 3,
-                "retries": 3,
+                "socket_timeout": 30,
+                "extractor_retries": 2,
+                "retries": 2,
             })
 
-            # extract_info con timeout duro de 30s
+            # extract_info con timeout duro de 90s
             resultado = [None]
             error = [None]
 
@@ -546,7 +564,7 @@ def cargar_video():
 
             hilo_extraccion = threading.Thread(target=extraer, daemon=True)
             hilo_extraccion.start()
-            hilo_extraccion.join(timeout=30)
+            hilo_extraccion.join(timeout=90)
 
             if hilo_extraccion.is_alive():
                 raise Exception(
@@ -635,6 +653,7 @@ def cargar_video():
                 error_msg = f"Unknown error occurred.\n\nDetails:\n{traceback.format_exc()}"
             messagebox.showerror("Error", f"Could not load video:\n\n{error_msg}")
         finally:
+            cargando[0] = False
             btn_cargar.config(state="normal", text="Load Video")
 
     thread = threading.Thread(target=cargar, daemon=True)
