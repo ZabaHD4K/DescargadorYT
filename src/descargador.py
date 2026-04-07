@@ -7,7 +7,7 @@ Description: A user-friendly YouTube downloader with GUI
 License: MIT
 """
 
-__version__ = "1.5.1"
+__version__ = "1.6.0"
 
 import yt_dlp
 import tkinter as tk
@@ -22,7 +22,8 @@ import webbrowser
 import threading
 import subprocess
 import zipfile
-import shutil
+import tempfile
+import traceback
 from pathlib import Path
 
 
@@ -33,12 +34,30 @@ FFMPEG_DIR = APP_DATA_DIR / "ffmpeg"
 # Variable global para la ruta de ffmpeg
 ffmpeg_location = None
 
+# Constantes del repo
+GITHUB_REPO = "ZabaHD4K/DescargadorYT"
+VERSION_URL = f"https://raw.githubusercontent.com/{GITHUB_REPO}/main/version.txt"
+EXE_DOWNLOAD_URL = f"https://github.com/{GITHUB_REPO}/raw/main/YTDownloader4k.exe"
 
-# Evitar múltiples instancias
+
+def mostrar_error(titulo, mensaje):
+    """Muestra un error en messagebox, creando root temporal si no existe."""
+    try:
+        messagebox.showerror(titulo, mensaje)
+    except Exception:
+        try:
+            tmp = tk.Tk()
+            tmp.withdraw()
+            messagebox.showerror(titulo, mensaje, parent=tmp)
+            tmp.destroy()
+        except Exception:
+            pass
+
+
+# ─── INSTANCIA ÚNICA ────────────────────────────────────────────────
 def instancia_unica():
     """Verifica que solo haya una instancia de la aplicación ejecutándose."""
     if getattr(sys, 'frozen', False):
-        import tempfile
         lock_file = Path(tempfile.gettempdir()) / "ytdownloader4k.lock"
 
         if lock_file.exists():
@@ -57,27 +76,26 @@ def instancia_unica():
 instancia_unica()
 
 
+# ─── FFMPEG ─────────────────────────────────────────────────────────
 def ffmpeg_disponible():
     """Comprueba si ffmpeg está disponible en el sistema o en la carpeta de la app."""
     global ffmpeg_location
 
-    # Comprobar en la carpeta de la app
     ffmpeg_exe = FFMPEG_DIR / "ffmpeg.exe"
     ffprobe_exe = FFMPEG_DIR / "ffprobe.exe"
     if ffmpeg_exe.exists() and ffprobe_exe.exists():
         ffmpeg_location = str(FFMPEG_DIR)
         return True
 
-    # Comprobar en PATH
     try:
         subprocess.run(
             ["ffmpeg", "-version"],
             capture_output=True, timeout=5,
             creationflags=subprocess.CREATE_NO_WINDOW if sys.platform == 'win32' else 0
         )
-        ffmpeg_location = None  # Está en PATH, no hace falta especificar
+        ffmpeg_location = None
         return True
-    except (FileNotFoundError, subprocess.TimeoutExpired):
+    except (FileNotFoundError, subprocess.TimeoutExpired, Exception):
         pass
 
     return False
@@ -99,22 +117,13 @@ def instalar_ffmpeg():
         font=("Arial", 12, "bold")
     ).pack(pady=15)
 
-    label_estado = tk.Label(
-        ventana,
-        text="Downloading FFmpeg...",
-        font=("Arial", 10)
-    )
+    label_estado = tk.Label(ventana, text="Downloading FFmpeg...", font=("Arial", 10))
     label_estado.pack(pady=5)
 
     progress = ttk.Progressbar(ventana, length=400, mode='determinate')
     progress.pack(pady=10)
 
-    label_detalle = tk.Label(
-        ventana,
-        text="This is a one-time setup",
-        font=("Arial", 9),
-        fg="gray"
-    )
+    label_detalle = tk.Label(ventana, text="This is a one-time setup", font=("Arial", 9), fg="gray")
     label_detalle.pack(pady=5)
 
     instalacion_ok = [False]
@@ -125,14 +134,13 @@ def instalar_ffmpeg():
             APP_DATA_DIR.mkdir(parents=True, exist_ok=True)
             zip_path = APP_DATA_DIR / "ffmpeg.zip"
 
-            # Descargar con progreso
             req = urllib.request.Request(FFMPEG_URL)
             req.add_header('User-Agent', 'YTDownloader4K')
 
-            with urllib.request.urlopen(req, timeout=60) as response:
+            with urllib.request.urlopen(req, timeout=120) as response:
                 total = int(response.headers.get('Content-Length', 0))
                 descargado = 0
-                bloque = 1024 * 256  # 256KB
+                bloque = 1024 * 256
 
                 with open(zip_path, 'wb') as f:
                     while True:
@@ -143,16 +151,13 @@ def instalar_ffmpeg():
                         descargado += len(datos)
 
                         if total > 0:
-                            porcentaje = (descargado / total) * 80  # 80% para descarga
+                            porcentaje = (descargado / total) * 80
                             progress['value'] = porcentaje
                             mb_desc = descargado / (1024 * 1024)
                             mb_total = total / (1024 * 1024)
-                            label_detalle.config(
-                                text=f"Downloading: {mb_desc:.1f} MB / {mb_total:.1f} MB"
-                            )
+                            label_detalle.config(text=f"Downloading: {mb_desc:.1f} MB / {mb_total:.1f} MB")
                         ventana.update_idletasks()
 
-            # Extraer
             label_estado.config(text="Extracting FFmpeg...")
             label_detalle.config(text="Almost done...")
             progress['value'] = 85
@@ -161,11 +166,9 @@ def instalar_ffmpeg():
             FFMPEG_DIR.mkdir(parents=True, exist_ok=True)
 
             with zipfile.ZipFile(zip_path, 'r') as zf:
-                # Buscar ffmpeg.exe y ffprobe.exe dentro del zip
                 for nombre in zf.namelist():
                     basename = os.path.basename(nombre)
                     if basename in ('ffmpeg.exe', 'ffprobe.exe'):
-                        # Extraer al directorio de ffmpeg
                         datos = zf.read(nombre)
                         destino = FFMPEG_DIR / basename
                         with open(destino, 'wb') as f:
@@ -174,10 +177,8 @@ def instalar_ffmpeg():
             progress['value'] = 95
             ventana.update_idletasks()
 
-            # Limpiar zip
             zip_path.unlink(missing_ok=True)
 
-            # Verificar
             if (FFMPEG_DIR / "ffmpeg.exe").exists():
                 ffmpeg_location = str(FFMPEG_DIR)
                 instalacion_ok[0] = True
@@ -206,7 +207,7 @@ def verificar_dependencias():
     """Verifica que todas las dependencias estén disponibles."""
     if not ffmpeg_disponible():
         if not instalar_ffmpeg():
-            messagebox.showwarning(
+            mostrar_error(
                 "Warning",
                 "FFmpeg could not be installed.\n\n"
                 "Video merging and MP3 conversion may not work.\n"
@@ -215,12 +216,9 @@ def verificar_dependencias():
             )
 
 
+# ─── AUTO-ACTUALIZACIÓN DEL EXE ────────────────────────────────────
 def verificar_actualizacion_app():
-    """Verifica si hay una nueva versión disponible en GitHub."""
-    GITHUB_REPO = "ZabaHD4K/DescargadorYT"
-    VERSION_URL = f"https://raw.githubusercontent.com/{GITHUB_REPO}/main/version.txt"
-    DOWNLOAD_URL = f"https://github.com/{GITHUB_REPO}/raw/main/YTDownloader4k.exe"
-
+    """Verifica si hay una nueva versión y ofrece auto-actualizar el .exe."""
     if not getattr(sys, 'frozen', False):
         return
 
@@ -232,71 +230,166 @@ def verificar_actualizacion_app():
             latest_version = response.read().decode().strip()
             current_version = __version__
 
-            if latest_version != current_version:
-                ventana_update = tk.Tk()
-                ventana_update.title("Update Available")
-                ventana_update.geometry("450x200")
-                ventana_update.resizable(False, False)
-                ventana_update.eval('tk::PlaceWindow . center')
-
-                tk.Label(
-                    ventana_update,
-                    text="New version available!",
-                    font=("Arial", 13, "bold"),
-                    fg="#2e7d32"
-                ).pack(pady=15)
-
-                tk.Label(
-                    ventana_update,
-                    text=f"Current version: v{current_version}  →  New version: v{latest_version}",
-                    font=("Arial", 10)
-                ).pack(pady=5)
-
-                tk.Label(
-                    ventana_update,
-                    text="Your browser will open to download the update.",
-                    font=("Arial", 9),
-                    fg="gray"
-                ).pack(pady=5)
-
-                def ir_a_descarga():
-                    webbrowser.open(DOWNLOAD_URL)
-                    ventana_update.destroy()
-
-                def omitir():
-                    ventana_update.destroy()
-
-                frame_botones = tk.Frame(ventana_update)
-                frame_botones.pack(pady=20)
-
-                tk.Button(
-                    frame_botones,
-                    text="Download Update",
-                    command=ir_a_descarga,
-                    bg="#4CAF50",
-                    fg="white",
-                    font=("Arial", 10, "bold"),
-                    width=20
-                ).pack(side="left", padx=5)
-
-                tk.Button(
-                    frame_botones,
-                    text="Skip",
-                    command=omitir,
-                    bg="#757575",
-                    fg="white",
-                    font=("Arial", 10),
-                    width=12
-                ).pack(side="left", padx=5)
-
-                ventana_update.mainloop()
+            if latest_version == current_version:
+                return  # Ya estamos al día
 
     except Exception:
-        pass
+        return  # Sin conexión, seguir sin actualizar
+
+    # Hay nueva versión — mostrar ventana de actualización
+    ventana = tk.Tk()
+    ventana.title("Update Available")
+    ventana.geometry("500x220")
+    ventana.resizable(False, False)
+    ventana.eval('tk::PlaceWindow . center')
+
+    tk.Label(
+        ventana,
+        text="New version available!",
+        font=("Arial", 13, "bold"),
+        fg="#2e7d32"
+    ).pack(pady=10)
+
+    tk.Label(
+        ventana,
+        text=f"Current: v{current_version}  →  New: v{latest_version}",
+        font=("Arial", 10)
+    ).pack(pady=5)
+
+    label_estado = tk.Label(ventana, text="", font=("Arial", 9), fg="gray")
+    label_estado.pack(pady=3)
+
+    progress = ttk.Progressbar(ventana, length=400, mode='determinate')
+
+    frame_botones = tk.Frame(ventana)
+    frame_botones.pack(pady=15)
+
+    actualizando = [False]
+
+    def iniciar_actualizacion():
+        if actualizando[0]:
+            return
+        actualizando[0] = True
+
+        # Ocultar botones, mostrar progreso
+        frame_botones.pack_forget()
+        progress.pack(pady=10)
+        label_estado.config(text="Downloading update...", fg="#1976d2")
+        ventana.update_idletasks()
+
+        def descargar_y_reemplazar():
+            try:
+                exe_actual = Path(sys.executable)
+                exe_nuevo = exe_actual.parent / "YTDownloader4k_update.exe"
+
+                # Descargar nuevo exe con progreso
+                req_dl = urllib.request.Request(EXE_DOWNLOAD_URL)
+                req_dl.add_header('User-Agent', 'YTDownloader4K')
+
+                with urllib.request.urlopen(req_dl, timeout=120) as resp:
+                    total = int(resp.headers.get('Content-Length', 0))
+                    descargado = 0
+                    bloque = 1024 * 256
+
+                    with open(exe_nuevo, 'wb') as f:
+                        while True:
+                            datos = resp.read(bloque)
+                            if not datos:
+                                break
+                            f.write(datos)
+                            descargado += len(datos)
+
+                            if total > 0:
+                                porcentaje = (descargado / total) * 100
+                                progress['value'] = porcentaje
+                                mb_desc = descargado / (1024 * 1024)
+                                mb_total = total / (1024 * 1024)
+                                label_estado.config(
+                                    text=f"Downloading: {mb_desc:.1f} MB / {mb_total:.1f} MB"
+                                )
+                            ventana.update_idletasks()
+
+                # Verificar que se descargó correctamente (mínimo 1MB)
+                if exe_nuevo.stat().st_size < 1_000_000:
+                    raise Exception("Downloaded file is too small, may be corrupted")
+
+                progress['value'] = 100
+                label_estado.config(text="Restarting with new version...", fg="green")
+                ventana.update_idletasks()
+
+                # Crear script .bat que:
+                # 1. Espera a que este proceso muera
+                # 2. Reemplaza el exe viejo con el nuevo
+                # 3. Lanza el nuevo exe
+                # 4. Se borra a sí mismo
+                bat_path = exe_actual.parent / "_update.bat"
+                bat_contenido = f'''@echo off
+ping 127.0.0.1 -n 3 > nul
+del "{exe_actual}"
+move "{exe_nuevo}" "{exe_actual}"
+start "" "{exe_actual}"
+del "%~f0"
+'''
+                bat_path.write_text(bat_contenido)
+
+                # Lanzar el bat oculto y cerrar la app
+                subprocess.Popen(
+                    ['cmd', '/c', str(bat_path)],
+                    creationflags=subprocess.CREATE_NO_WINDOW
+                )
+
+                ventana.destroy()
+                sys.exit(0)
+
+            except Exception as e:
+                # Limpiar archivo parcial
+                try:
+                    exe_nuevo = Path(sys.executable).parent / "YTDownloader4k_update.exe"
+                    exe_nuevo.unlink(missing_ok=True)
+                except Exception:
+                    pass
+
+                progress.pack_forget()
+                frame_botones.pack(pady=15)
+                actualizando[0] = False
+                label_estado.config(
+                    text=f"Error: {str(e)[:50]}. Try again or skip.",
+                    fg="red"
+                )
+                ventana.update_idletasks()
+
+        thread = threading.Thread(target=descargar_y_reemplazar, daemon=True)
+        thread.start()
+
+    def omitir():
+        ventana.destroy()
+
+    tk.Button(
+        frame_botones,
+        text="Update Now",
+        command=iniciar_actualizacion,
+        bg="#4CAF50",
+        fg="white",
+        font=("Arial", 10, "bold"),
+        width=20
+    ).pack(side="left", padx=5)
+
+    tk.Button(
+        frame_botones,
+        text="Skip",
+        command=omitir,
+        bg="#757575",
+        fg="white",
+        font=("Arial", 10),
+        width=12
+    ).pack(side="left", padx=5)
+
+    ventana.mainloop()
 
 
+# ─── ACTUALIZACIÓN LIBRERÍAS (SOLO PYTHON) ──────────────────────────
 def verificar_actualizaciones():
-    """Verifica y actualiza las librerías necesarias (solo cuando se ejecuta desde Python)."""
+    """Verifica y actualiza las librerías necesarias (solo desde Python)."""
     if getattr(sys, 'frozen', False):
         return
 
@@ -308,39 +401,22 @@ def verificar_actualizaciones():
     except Exception:
         return
 
-    ventana_actualizacion = tk.Tk()
-    ventana_actualizacion.title("Checking Updates")
-    ventana_actualizacion.geometry("500x200")
-    ventana_actualizacion.resizable(False, False)
-    ventana_actualizacion.eval('tk::PlaceWindow . center')
+    ventana = tk.Tk()
+    ventana.title("Checking Updates")
+    ventana.geometry("500x200")
+    ventana.resizable(False, False)
+    ventana.eval('tk::PlaceWindow . center')
 
-    tk.Label(
-        ventana_actualizacion,
-        text="Checking library updates",
-        font=("Arial", 12, "bold")
-    ).pack(pady=15)
+    tk.Label(ventana, text="Checking library updates", font=("Arial", 12, "bold")).pack(pady=15)
 
-    label_estado = tk.Label(
-        ventana_actualizacion,
-        text="Starting verification...",
-        font=("Arial", 10)
-    )
+    label_estado = tk.Label(ventana, text="Starting verification...", font=("Arial", 10))
     label_estado.pack(pady=5)
 
-    progress = ttk.Progressbar(
-        ventana_actualizacion,
-        length=400,
-        mode='indeterminate'
-    )
+    progress = ttk.Progressbar(ventana, length=400, mode='indeterminate')
     progress.pack(pady=10)
     progress.start(10)
 
-    label_detalle = tk.Label(
-        ventana_actualizacion,
-        text="",
-        font=("Arial", 9),
-        fg="gray"
-    )
+    label_detalle = tk.Label(ventana, text="", font=("Arial", 9), fg="gray")
     label_detalle.pack(pady=5)
 
     def actualizar_librerias():
@@ -351,63 +427,52 @@ def verificar_actualizaciones():
             for i, libreria in enumerate(dependencias):
                 label_estado.config(text=f"Checking {libreria}...")
                 label_detalle.config(text=f"Library {i+1} of {len(dependencias)}")
-                ventana_actualizacion.update()
+                ventana.update()
 
                 try:
                     resultado = subprocess.run(
                         [sys.executable, "-m", "pip", "install", "--upgrade", libreria],
-                        capture_output=True,
-                        text=True,
-                        timeout=60
+                        capture_output=True, text=True, timeout=60
                     )
                     if "Successfully installed" in resultado.stdout:
                         actualizaciones_realizadas.append(libreria)
                         label_detalle.config(text=f"✓ {libreria} updated", fg="green")
                     else:
                         label_detalle.config(text=f"✓ {libreria} up to date", fg="blue")
-                    ventana_actualizacion.update()
+                    ventana.update()
                 except subprocess.TimeoutExpired:
                     label_detalle.config(text=f"⚠ Timeout updating {libreria}", fg="orange")
-                    ventana_actualizacion.update()
+                    ventana.update()
                 except Exception:
                     label_detalle.config(text=f"⚠ Error updating {libreria}", fg="orange")
-                    ventana_actualizacion.update()
+                    ventana.update()
 
             progress.stop()
             progress.config(mode='determinate', value=100)
 
             if actualizaciones_realizadas:
-                label_estado.config(
-                    text=f"✓ Updates completed ({len(actualizaciones_realizadas)})",
-                    fg="green"
-                )
-                label_detalle.config(
-                    text=f"Updated: {', '.join(actualizaciones_realizadas)}",
-                    fg="green"
-                )
+                label_estado.config(text=f"✓ Updates completed ({len(actualizaciones_realizadas)})", fg="green")
+                label_detalle.config(text=f"Updated: {', '.join(actualizaciones_realizadas)}", fg="green")
             else:
-                label_estado.config(
-                    text="✓ All libraries are up to date",
-                    fg="blue"
-                )
+                label_estado.config(text="✓ All libraries are up to date", fg="blue")
                 label_detalle.config(text="No updates required", fg="blue")
 
-            ventana_actualizacion.update()
-            ventana_actualizacion.after(2000, ventana_actualizacion.destroy)
+            ventana.update()
+            ventana.after(2000, ventana.destroy)
 
         except Exception as e:
             progress.stop()
             label_estado.config(text="⚠ Error during verification", fg="red")
             label_detalle.config(text=str(e)[:50], fg="red")
-            ventana_actualizacion.update()
-            ventana_actualizacion.after(3000, ventana_actualizacion.destroy)
+            ventana.update()
+            ventana.after(3000, ventana.destroy)
 
     thread = threading.Thread(target=actualizar_librerias, daemon=True)
     thread.start()
+    ventana.mainloop()
 
-    ventana_actualizacion.mainloop()
 
-
+# ─── OPCIONES YT-DLP ───────────────────────────────────────────────
 def obtener_opciones_ydl(extras=None):
     """Devuelve opciones base de yt-dlp con ffmpeg_location si es necesario."""
     opts = {}
@@ -418,17 +483,29 @@ def obtener_opciones_ydl(extras=None):
     return opts
 
 
-# Ejecutar verificaciones al inicio
-verificar_actualizacion_app()
-verificar_dependencias()
-verificar_actualizaciones()
+# ─── VERIFICACIONES AL INICIO ──────────────────────────────────────
+try:
+    verificar_actualizacion_app()
+except Exception as e:
+    mostrar_error("Update Error", f"Error checking for updates:\n\n{e}")
+
+try:
+    verificar_dependencias()
+except Exception as e:
+    mostrar_error("Dependency Error", f"Error checking dependencies:\n\n{e}")
+
+try:
+    verificar_actualizaciones()
+except Exception as e:
+    mostrar_error("Library Error", f"Error updating libraries:\n\n{e}")
 
 
-# Variables globales
+# ─── VARIABLES GLOBALES ────────────────────────────────────────────
 formatos_disponibles = []
 info_video = None
 
 
+# ─── CARGAR VIDEO ──────────────────────────────────────────────────
 def cargar_video():
     """Carga la información del video y muestra formatos disponibles."""
     global formatos_disponibles, info_video
@@ -471,10 +548,20 @@ def cargar_video():
             hilo_extraccion.join(timeout=30)
 
             if hilo_extraccion.is_alive():
-                raise Exception("Timeout: the server took too long to respond. Try again.")
+                raise Exception(
+                    "Timeout: the server took too long to respond.\n\n"
+                    "Possible causes:\n"
+                    "- Slow internet connection\n"
+                    "- YouTube is blocking requests\n"
+                    "- Invalid or private video URL\n\n"
+                    "Try again in a few seconds."
+                )
 
             if error[0]:
                 raise error[0]
+
+            if resultado[0] is None:
+                raise Exception("Could not retrieve video information. The URL may be invalid or the video may be private.")
 
             info_video = resultado[0]
 
@@ -508,7 +595,6 @@ def cargar_video():
 
                     fps = f.get('fps', 30) or 30
                     format_id = f['format_id']
-
                     key = f"{height}_{vcodec}_{fps}"
 
                     if key not in formatos_video:
@@ -526,6 +612,9 @@ def cargar_video():
                 reverse=True
             )
 
+            if not formatos_disponibles:
+                raise Exception("No video formats found. The video may be restricted or unavailable.")
+
             formatos_disponibles.append({
                 'height': 0,
                 'format_id': 'bestaudio',
@@ -540,7 +629,10 @@ def cargar_video():
             btn_descargar.config(state="normal")
 
         except Exception as e:
-            messagebox.showerror("Error", f"Could not load video:\n\n{str(e)}")
+            error_msg = str(e)
+            if not error_msg or error_msg == "None":
+                error_msg = f"Unknown error occurred.\n\nDetails:\n{traceback.format_exc()}"
+            messagebox.showerror("Error", f"Could not load video:\n\n{error_msg}")
         finally:
             btn_cargar.config(state="normal", text="Load Video")
 
@@ -548,6 +640,7 @@ def cargar_video():
     thread.start()
 
 
+# ─── DESCARGAR VIDEO ───────────────────────────────────────────────
 def descargar_video():
     """Descarga el video con el formato seleccionado."""
     if not info_video or not formatos_disponibles:
@@ -570,39 +663,38 @@ def descargar_video():
     label_progreso.config(text="Starting download...")
 
     def hook_progreso(d):
-        if d['status'] == 'downloading':
-            if 'total_bytes' in d:
-                total = d['total_bytes']
-                descargado = d['downloaded_bytes']
-                porcentaje = (descargado / total) * 100
-            elif 'total_bytes_estimate' in d:
-                total = d['total_bytes_estimate']
-                descargado = d['downloaded_bytes']
-                porcentaje = (descargado / total) * 100
-            else:
-                porcentaje = 0
-
-            progressbar['value'] = porcentaje
-
-            if 'eta' in d and d['eta']:
-                eta = d['eta']
-                minutos = eta // 60
-                segundos = eta % 60
-                tiempo_str = f"{int(minutos)}m {int(segundos)}s" if minutos > 0 else f"{int(segundos)}s"
-                velocidad = d.get('speed', 0)
-                if velocidad:
-                    velocidad_mb = velocidad / (1024 * 1024)
-                    label_progreso.config(text=f"Downloading: {porcentaje:.1f}% | {velocidad_mb:.2f} MB/s | Remaining: {tiempo_str}")
+        try:
+            if d['status'] == 'downloading':
+                if 'total_bytes' in d:
+                    porcentaje = (d['downloaded_bytes'] / d['total_bytes']) * 100
+                elif 'total_bytes_estimate' in d:
+                    porcentaje = (d['downloaded_bytes'] / d['total_bytes_estimate']) * 100
                 else:
-                    label_progreso.config(text=f"Downloading: {porcentaje:.1f}% | Remaining: {tiempo_str}")
-            else:
-                label_progreso.config(text=f"Downloading: {porcentaje:.1f}%")
+                    porcentaje = 0
 
-            root.update_idletasks()
-        elif d['status'] == 'finished':
-            progressbar['value'] = 100
-            label_progreso.config(text="Processing file...")
-            root.update_idletasks()
+                progressbar['value'] = porcentaje
+
+                if 'eta' in d and d['eta']:
+                    eta = d['eta']
+                    minutos = eta // 60
+                    segundos = eta % 60
+                    tiempo_str = f"{int(minutos)}m {int(segundos)}s" if minutos > 0 else f"{int(segundos)}s"
+                    velocidad = d.get('speed', 0)
+                    if velocidad:
+                        velocidad_mb = velocidad / (1024 * 1024)
+                        label_progreso.config(text=f"Downloading: {porcentaje:.1f}% | {velocidad_mb:.2f} MB/s | Remaining: {tiempo_str}")
+                    else:
+                        label_progreso.config(text=f"Downloading: {porcentaje:.1f}% | Remaining: {tiempo_str}")
+                else:
+                    label_progreso.config(text=f"Downloading: {porcentaje:.1f}%")
+
+                root.update_idletasks()
+            elif d['status'] == 'finished':
+                progressbar['value'] = 100
+                label_progreso.config(text="Processing file...")
+                root.update_idletasks()
+        except Exception:
+            pass
 
     def descargar():
         try:
@@ -644,22 +736,25 @@ def descargar_video():
 
             progressbar['value'] = 100
             label_progreso.config(text="✓ Download complete")
-            btn_descargar.config(state="normal", text="Download")
             messagebox.showinfo("Complete", f"Downloaded to:\n{carpeta_descargas}")
-            progressbar.pack_forget()
-            label_progreso.pack_forget()
 
         except Exception as e:
+            error_msg = str(e)
+            if "ffmpeg" in error_msg.lower() or "ffprobe" in error_msg.lower():
+                error_msg += "\n\nFFmpeg may not be installed correctly. Restart the app to reinstall it."
+            elif "urlopen" in error_msg.lower() or "connection" in error_msg.lower():
+                error_msg += "\n\nCheck your internet connection and try again."
+            messagebox.showerror("Download Error", f"Error during download:\n\n{error_msg}")
+        finally:
             btn_descargar.config(state="normal", text="Download")
             progressbar.pack_forget()
             label_progreso.pack_forget()
-            messagebox.showerror("Error", f"Error during download:\n\n{str(e)}")
 
     thread = threading.Thread(target=descargar, daemon=True)
     thread.start()
 
 
-# Interfaz gráfica
+# ─── INTERFAZ GRÁFICA ──────────────────────────────────────────────
 root = tk.Tk()
 root.title(f"YTDownloader4K v{__version__}")
 root.geometry("520x420")
