@@ -280,6 +280,7 @@ def verificar_actualizacion_app():
         def descargar_y_reemplazar():
             try:
                 exe_actual = Path(sys.executable)
+                exe_destino = exe_actual.parent / f"YTDownloader4k_v{latest_version}.exe"
                 exe_nuevo = exe_actual.parent / "YTDownloader4k_update.exe"
 
                 # Descargar nuevo exe con progreso
@@ -326,8 +327,8 @@ def verificar_actualizacion_app():
                 bat_contenido = f'''@echo off
 ping 127.0.0.1 -n 3 > nul
 del "{exe_actual}"
-move "{exe_nuevo}" "{exe_actual}"
-start "" "{exe_actual}"
+move "{exe_nuevo}" "{exe_destino}"
+start "" "{exe_destino}"
 del "%~f0"
 '''
                 bat_path.write_text(bat_contenido)
