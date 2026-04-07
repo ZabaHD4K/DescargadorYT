@@ -7,7 +7,7 @@ Description: A user-friendly YouTube downloader with GUI
 License: MIT
 """
 
-__version__ = "1.6.4"
+__version__ = "1.6.5"
 
 import yt_dlp
 import tkinter as tk
@@ -319,15 +319,35 @@ def verificar_actualizacion_app():
                 ventana.update_idletasks()
 
                 # Crear script .bat que:
-                # 1. Espera a que este proceso muera
-                # 2. Reemplaza el exe viejo con el nuevo
-                # 3. Lanza el nuevo exe
-                # 4. Se borra a sí mismo
-                bat_path = exe_actual.parent / "_update.bat"
+                # 1. Espera a que el proceso muera (reintenta hasta 10 veces)
+                # 2. Borra TODOS los exe viejos de YTDownloader4k
+                # 3. Renombra el nuevo
+                # 4. Lanza el nuevo exe
+                # 5. Se borra a sí mismo
+                carpeta = exe_actual.parent
+                bat_path = carpeta / "_update.bat"
                 bat_contenido = f'''@echo off
-ping 127.0.0.1 -n 3 > nul
-del "{exe_actual}"
-move "{exe_nuevo}" "{exe_destino}"
+setlocal
+
+set "RETRIES=0"
+:WAIT_LOOP
+tasklist /FI "IMAGENAME eq {exe_actual.name}" 2>NUL | find /I "{exe_actual.name}" >NUL
+if not errorlevel 1 (
+    set /a RETRIES+=1
+    if %RETRIES% GEQ 10 goto FORCE_KILL
+    ping 127.0.0.1 -n 2 > nul
+    goto WAIT_LOOP
+)
+goto DO_UPDATE
+
+:FORCE_KILL
+taskkill /F /IM "{exe_actual.name}" > nul 2>&1
+ping 127.0.0.1 -n 2 > nul
+
+:DO_UPDATE
+del /F /Q "{carpeta}\\YTDownloader4k_v*.exe" > nul 2>&1
+del /F /Q "{carpeta}\\YTDownloader4k.exe" > nul 2>&1
+move /Y "{exe_nuevo}" "{exe_destino}"
 start "" "{exe_destino}"
 del "%~f0"
 '''
@@ -340,7 +360,7 @@ del "%~f0"
                 )
 
                 ventana.destroy()
-                sys.exit(0)
+                os._exit(0)
 
             except Exception as e:
                 # Limpiar archivo parcial
