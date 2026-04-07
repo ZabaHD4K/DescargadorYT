@@ -7,7 +7,7 @@ Description: A user-friendly YouTube downloader with GUI
 License: MIT
 """
 
-__version__ = "1.6.2"
+__version__ = "1.6.3"
 
 import yt_dlp
 import tkinter as tk
@@ -553,6 +553,7 @@ def cargar_video():
                 "socket_timeout": 30,
                 "extractor_retries": 1,
                 "retries": 1,
+                "noplaylist": True,
             })
 
             opts_android = obtener_opciones_ydl({
@@ -563,6 +564,7 @@ def cargar_video():
                 "socket_timeout": 30,
                 "extractor_retries": 1,
                 "retries": 1,
+                "noplaylist": True,
                 "extractor_args": {"youtube": {"player_client": ["android"]}},
             })
 
