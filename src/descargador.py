@@ -7,7 +7,7 @@ Description: A user-friendly YouTube downloader with GUI
 License: MIT
 """
 
-__version__ = "1.5.0"
+__version__ = "1.5.1"
 
 import yt_dlp
 import tkinter as tk
@@ -451,16 +451,40 @@ def cargar_video():
                 "nocheckcertificate": True,
                 "geo_bypass": True,
                 "socket_timeout": 15,
+                "extractor_retries": 3,
+                "retries": 3,
             })
 
-            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                info_video = ydl.extract_info(url, download=False)
+            # extract_info con timeout duro de 30s
+            resultado = [None]
+            error = [None]
+
+            def extraer():
+                try:
+                    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                        resultado[0] = ydl.extract_info(url, download=False)
+                except Exception as e:
+                    error[0] = e
+
+            hilo_extraccion = threading.Thread(target=extraer, daemon=True)
+            hilo_extraccion.start()
+            hilo_extraccion.join(timeout=30)
+
+            if hilo_extraccion.is_alive():
+                raise Exception("Timeout: the server took too long to respond. Try again.")
+
+            if error[0]:
+                raise error[0]
+
+            info_video = resultado[0]
 
             # Cargar miniatura
             try:
                 thumbnail_url = info_video.get('thumbnail')
                 if thumbnail_url:
-                    img_data = urllib.request.urlopen(thumbnail_url).read()
+                    req = urllib.request.Request(thumbnail_url)
+                    req.add_header('User-Agent', 'YTDownloader4K')
+                    img_data = urllib.request.urlopen(req, timeout=10).read()
                     img = Image.open(BytesIO(img_data))
                     img = img.resize((160, 90), Image.Resampling.LANCZOS)
                     photo = ImageTk.PhotoImage(img)
@@ -513,11 +537,11 @@ def cargar_video():
             if opciones:
                 combo_resolucion.current(0)
 
-            btn_cargar.config(state="normal", text="Load Video")
             btn_descargar.config(state="normal")
 
         except Exception as e:
             messagebox.showerror("Error", f"Could not load video:\n\n{str(e)}")
+        finally:
             btn_cargar.config(state="normal", text="Load Video")
 
     thread = threading.Thread(target=cargar, daemon=True)
