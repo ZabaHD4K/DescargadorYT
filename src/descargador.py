@@ -7,7 +7,7 @@ Description: A user-friendly YouTube downloader with GUI
 License: MIT
 """
 
-__version__ = "1.6.1"
+__version__ = "1.6.2"
 
 import yt_dlp
 import tkinter as tk
@@ -541,48 +541,61 @@ def cargar_video():
     def cargar():
         global formatos_disponibles, info_video
         try:
-            ydl_opts = obtener_opciones_ydl({
+            # Lanzar 2 extracciones en paralelo con distintos clients
+            # El primero que responda gana, el otro se descarta
+            import concurrent.futures
+
+            opts_default = obtener_opciones_ydl({
                 "quiet": True,
                 "no_warnings": True,
                 "nocheckcertificate": True,
                 "geo_bypass": True,
                 "socket_timeout": 30,
-                "extractor_retries": 2,
-                "retries": 2,
+                "extractor_retries": 1,
+                "retries": 1,
             })
 
-            # extract_info con timeout duro de 90s
-            resultado = [None]
-            error = [None]
+            opts_android = obtener_opciones_ydl({
+                "quiet": True,
+                "no_warnings": True,
+                "nocheckcertificate": True,
+                "geo_bypass": True,
+                "socket_timeout": 30,
+                "extractor_retries": 1,
+                "retries": 1,
+                "extractor_args": {"youtube": {"player_client": ["android"]}},
+            })
 
-            def extraer():
-                try:
-                    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                        resultado[0] = ydl.extract_info(url, download=False)
-                except Exception as e:
-                    error[0] = e
+            def extraer_con_opts(opts):
+                with yt_dlp.YoutubeDL(opts) as ydl:
+                    return ydl.extract_info(url, download=False)
 
-            hilo_extraccion = threading.Thread(target=extraer, daemon=True)
-            hilo_extraccion.start()
-            hilo_extraccion.join(timeout=90)
+            with concurrent.futures.ThreadPoolExecutor(max_workers=2) as pool:
+                futuro_default = pool.submit(extraer_con_opts, opts_default)
+                futuro_android = pool.submit(extraer_con_opts, opts_android)
 
-            if hilo_extraccion.is_alive():
-                raise Exception(
-                    "Timeout: the server took too long to respond.\n\n"
-                    "Possible causes:\n"
-                    "- Slow internet connection\n"
-                    "- YouTube is blocking requests\n"
-                    "- Invalid or private video URL\n\n"
-                    "Try again in a few seconds."
-                )
+                futuros = {futuro_default: "default", futuro_android: "android"}
+                resultado_info = None
+                errores = []
 
-            if error[0]:
-                raise error[0]
+                for futuro in concurrent.futures.as_completed(futuros, timeout=90):
+                    try:
+                        resultado_info = futuro.result()
+                        if resultado_info:
+                            # Tenemos resultado, cancelar el otro
+                            for f in futuros:
+                                if f is not futuro:
+                                    f.cancel()
+                            break
+                    except Exception as e:
+                        errores.append(f"{futuros[futuro]}: {e}")
 
-            if resultado[0] is None:
+            if resultado_info is None:
+                if errores:
+                    raise Exception("Could not load video:\n\n" + "\n".join(errores))
                 raise Exception("Could not retrieve video information. The URL may be invalid or the video may be private.")
 
-            info_video = resultado[0]
+            info_video = resultado_info
 
             # Cargar miniatura
             try:
