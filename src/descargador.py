@@ -7,7 +7,7 @@ Description: A user-friendly YouTube downloader with GUI
 License: MIT
 """
 
-__version__ = "1.4.1"
+__version__ = "1.4.2"
 
 import yt_dlp
 import tkinter as tk
@@ -283,6 +283,7 @@ def cargar_video():
                 "no_warnings": True,
                 "nocheckcertificate": True,
                 "geo_bypass": True,
+                "socket_timeout": 15,
             }
 
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
