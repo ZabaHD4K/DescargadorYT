@@ -7,7 +7,7 @@ Description: A user-friendly YouTube downloader with GUI
 License: MIT
 """
 
-__version__ = "1.4.2"
+__version__ = "1.4.3"
 
 import yt_dlp
 import tkinter as tk
@@ -39,15 +39,23 @@ def instancia_unica():
     if getattr(sys, 'frozen', False):
         import tempfile
         lock_file = Path(tempfile.gettempdir()) / "ytdownloader4k.lock"
-        
+
         if lock_file.exists():
-            # Ya hay una instancia ejecutándose
-            sys.exit(0)
-        else:
-            # Crear archivo lock
-            lock_file.touch()
-            import atexit
-            atexit.register(lambda: lock_file.unlink(missing_ok=True))
+            # Comprobar si el proceso que creó el lock sigue vivo
+            try:
+                pid = int(lock_file.read_text().strip())
+                import psutil
+                if psutil.pid_exists(pid):
+                    sys.exit(0)
+                # Proceso muerto, lock huérfano — continuar
+            except (ValueError, ImportError, Exception):
+                # Lock corrupto o sin psutil — continuar
+                pass
+
+        # Crear/actualizar archivo lock con nuestro PID
+        lock_file.write_text(str(os.getpid()))
+        import atexit
+        atexit.register(lambda: lock_file.unlink(missing_ok=True))
 
 instancia_unica()
 
