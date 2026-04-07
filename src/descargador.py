@@ -7,7 +7,7 @@ Description: A user-friendly YouTube downloader with GUI
 License: MIT
 """
 
-__version__ = "1.4.0"
+__version__ = "1.4.1"
 
 import yt_dlp
 import tkinter as tk
@@ -277,20 +277,16 @@ def cargar_video():
     def cargar():
         global formatos_disponibles, info_video
         try:
-            # Ejecutar yt-dlp como subprocess para obtener TODOS los formatos incluyendo DASH
-            cmd = [
-                "yt-dlp",
-                "-J",  # Output JSON con toda la info
-                "--no-warnings",
-                url
-            ]
-            
-            result = subprocess.run(cmd, capture_output=True, text=True, encoding='utf-8')
-            
-            if result.returncode != 0:
-                raise Exception(f"Error getting video information")
-            
-            info_video = json.loads(result.stdout)
+            # Usar yt_dlp como librería para obtener TODOS los formatos incluyendo DASH
+            ydl_opts = {
+                "quiet": True,
+                "no_warnings": True,
+                "nocheckcertificate": True,
+                "geo_bypass": True,
+            }
+
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                info_video = ydl.extract_info(url, download=False)
             
             # Cargar miniatura
             try:
