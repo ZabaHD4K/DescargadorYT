@@ -7,7 +7,7 @@ Description: A user-friendly YouTube downloader with GUI
 License: MIT
 """
 
-__version__ = "1.6.3"
+__version__ = "1.6.4"
 
 import yt_dlp
 import tkinter as tk
@@ -836,4 +836,15 @@ label_progreso = tk.Label(root, text="", font=("Arial", 9), fg="#1976d2")
 
 tk.Label(root, text="Folder: Downloads | Author: Alejandro Zabaleta", font=("Arial", 8), fg="gray").pack(side="bottom", pady=5)
 
+
+def cerrar_app():
+    """Cierra la app y mata todos los procesos hijos."""
+    try:
+        root.destroy()
+    except Exception:
+        pass
+    os._exit(0)
+
+
+root.protocol("WM_DELETE_WINDOW", cerrar_app)
 root.mainloop()
