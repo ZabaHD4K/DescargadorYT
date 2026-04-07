@@ -7,7 +7,7 @@ Description: A user-friendly YouTube downloader with GUI
 License: MIT
 """
 
-__version__ = "1.4.3"
+__version__ = "1.4.4"
 
 import yt_dlp
 import tkinter as tk
@@ -146,28 +146,40 @@ def verificar_actualizacion_app():
 
 
 def verificar_actualizaciones():
-    """Verifica y actualiza las librerías necesarias."""
+    """Verifica y actualiza las librerías necesarias (solo cuando se ejecuta desde Python)."""
+    # Si es .exe, las librerías van empaquetadas — la actualización es via app update
+    if getattr(sys, 'frozen', False):
+        return
+
+    # Comprobar que pip está disponible
+    try:
+        subprocess.run(
+            [sys.executable, "-m", "pip", "--version"],
+            capture_output=True, text=True, timeout=10
+        ).check_returncode()
+    except Exception:
+        # Sin pip no podemos actualizar, continuar sin más
+        return
+
     ventana_actualizacion = tk.Tk()
     ventana_actualizacion.title("Checking Updates")
     ventana_actualizacion.geometry("500x200")
     ventana_actualizacion.resizable(False, False)
-    
-    # Centrar ventana
     ventana_actualizacion.eval('tk::PlaceWindow . center')
-    
+
     tk.Label(
         ventana_actualizacion,
         text="Checking library updates",
         font=("Arial", 12, "bold")
     ).pack(pady=15)
-    
+
     label_estado = tk.Label(
         ventana_actualizacion,
         text="Starting verification...",
         font=("Arial", 10)
     )
     label_estado.pack(pady=5)
-    
+
     progress = ttk.Progressbar(
         ventana_actualizacion,
         length=400,
@@ -175,7 +187,7 @@ def verificar_actualizaciones():
     )
     progress.pack(pady=10)
     progress.start(10)
-    
+
     label_detalle = tk.Label(
         ventana_actualizacion,
         text="",
@@ -183,54 +195,48 @@ def verificar_actualizaciones():
         fg="gray"
     )
     label_detalle.pack(pady=5)
-    
+
     def actualizar_librerias():
         """Función que ejecuta la actualización en segundo plano."""
-        librerias = ['yt-dlp', 'tkinter']
+        dependencias = ['yt-dlp', 'Pillow']
         actualizaciones_realizadas = []
-        
+
         try:
-            for i, libreria in enumerate(librerias):
-                # Actualizar estado
+            for i, libreria in enumerate(dependencias):
                 label_estado.config(text=f"Checking {libreria}...")
-                label_detalle.config(text=f"Library {i+1} of {len(librerias)}")
+                label_detalle.config(text=f"Library {i+1} of {len(dependencias)}")
                 ventana_actualizacion.update()
-                
-                # Verificar versión actual e instalar/actualizar
+
                 try:
-                    if libreria == 'yt-dlp':
-                        resultado = subprocess.run(
-                            [sys.executable, "-m", "pip", "install", "--upgrade", "yt-dlp"],
-                            capture_output=True,
-                            text=True,
-                            timeout=30
-                        )
-                        if "Successfully installed" in resultado.stdout or "Requirement already satisfied" in resultado.stdout:
-                            if "Successfully installed" in resultado.stdout:
-                                actualizaciones_realizadas.append(libreria)
-                                label_detalle.config(text=f"✓ {libreria} updated", fg="green")
-                            else:
-                                label_detalle.config(text=f"✓ {libreria} already up to date", fg="blue")
-                        ventana_actualizacion.update()
+                    resultado = subprocess.run(
+                        [sys.executable, "-m", "pip", "install", "--upgrade", libreria],
+                        capture_output=True,
+                        text=True,
+                        timeout=60
+                    )
+                    if "Successfully installed" in resultado.stdout:
+                        actualizaciones_realizadas.append(libreria)
+                        label_detalle.config(text=f"✓ {libreria} updated", fg="green")
+                    else:
+                        label_detalle.config(text=f"✓ {libreria} up to date", fg="blue")
+                    ventana_actualizacion.update()
                 except subprocess.TimeoutExpired:
-                    label_detalle.config(text=f"⚠ Timeout en {libreria}", fg="orange")
+                    label_detalle.config(text=f"⚠ Timeout updating {libreria}", fg="orange")
                     ventana_actualizacion.update()
-                except Exception as e:
-                    label_detalle.config(text=f"⚠ Error en {libreria}", fg="orange")
+                except Exception:
+                    label_detalle.config(text=f"⚠ Error updating {libreria}", fg="orange")
                     ventana_actualizacion.update()
-            
-            # Detener barra de progreso
+
             progress.stop()
             progress.config(mode='determinate', value=100)
-            
-            # Mensaje final
+
             if actualizaciones_realizadas:
                 label_estado.config(
                     text=f"✓ Updates completed ({len(actualizaciones_realizadas)})",
                     fg="green"
                 )
                 label_detalle.config(
-                    text=f"Updated libraries: {', '.join(actualizaciones_realizadas)}",
+                    text=f"Updated: {', '.join(actualizaciones_realizadas)}",
                     fg="green"
                 )
             else:
@@ -239,21 +245,20 @@ def verificar_actualizaciones():
                     fg="blue"
                 )
                 label_detalle.config(text="No updates required", fg="blue")
-            
+
             ventana_actualizacion.update()
             ventana_actualizacion.after(2000, ventana_actualizacion.destroy)
-            
+
         except Exception as e:
             progress.stop()
             label_estado.config(text="⚠ Error during verification", fg="red")
             label_detalle.config(text=str(e)[:50], fg="red")
             ventana_actualizacion.update()
             ventana_actualizacion.after(3000, ventana_actualizacion.destroy)
-    
-    # Ejecutar en hilo separado para no bloquear la interfaz
+
     thread = threading.Thread(target=actualizar_librerias, daemon=True)
     thread.start()
-    
+
     ventana_actualizacion.mainloop()
 
 
