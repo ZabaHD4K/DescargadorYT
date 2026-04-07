@@ -7,7 +7,7 @@ Description: A user-friendly YouTube downloader with GUI
 License: MIT
 """
 
-__version__ = "1.4.4"
+__version__ = "1.5.0"
 
 import yt_dlp
 import tkinter as tk
@@ -21,16 +21,17 @@ import json
 import webbrowser
 import threading
 import subprocess
-import os
-import subprocess
-import sys
-import threading
-import urllib.request
-import json
-import webbrowser
-import sys
+import zipfile
+import shutil
 from pathlib import Path
-from io import BytesIO
+
+
+# Directorio de datos de la app
+APP_DATA_DIR = Path(os.environ.get('LOCALAPPDATA', os.path.expanduser('~'))) / "YTDownloader4k"
+FFMPEG_DIR = APP_DATA_DIR / "ffmpeg"
+
+# Variable global para la ruta de ffmpeg
+ffmpeg_location = None
 
 
 # Evitar múltiples instancias
@@ -41,18 +42,14 @@ def instancia_unica():
         lock_file = Path(tempfile.gettempdir()) / "ytdownloader4k.lock"
 
         if lock_file.exists():
-            # Comprobar si el proceso que creó el lock sigue vivo
             try:
                 pid = int(lock_file.read_text().strip())
                 import psutil
                 if psutil.pid_exists(pid):
                     sys.exit(0)
-                # Proceso muerto, lock huérfano — continuar
             except (ValueError, ImportError, Exception):
-                # Lock corrupto o sin psutil — continuar
                 pass
 
-        # Crear/actualizar archivo lock con nuestro PID
         lock_file.write_text(str(os.getpid()))
         import atexit
         atexit.register(lambda: lock_file.unlink(missing_ok=True))
@@ -60,64 +57,218 @@ def instancia_unica():
 instancia_unica()
 
 
+def ffmpeg_disponible():
+    """Comprueba si ffmpeg está disponible en el sistema o en la carpeta de la app."""
+    global ffmpeg_location
+
+    # Comprobar en la carpeta de la app
+    ffmpeg_exe = FFMPEG_DIR / "ffmpeg.exe"
+    ffprobe_exe = FFMPEG_DIR / "ffprobe.exe"
+    if ffmpeg_exe.exists() and ffprobe_exe.exists():
+        ffmpeg_location = str(FFMPEG_DIR)
+        return True
+
+    # Comprobar en PATH
+    try:
+        subprocess.run(
+            ["ffmpeg", "-version"],
+            capture_output=True, timeout=5,
+            creationflags=subprocess.CREATE_NO_WINDOW if sys.platform == 'win32' else 0
+        )
+        ffmpeg_location = None  # Está en PATH, no hace falta especificar
+        return True
+    except (FileNotFoundError, subprocess.TimeoutExpired):
+        pass
+
+    return False
+
+
+def instalar_ffmpeg():
+    """Descarga e instala ffmpeg automáticamente con ventana de progreso."""
+    FFMPEG_URL = "https://github.com/yt-dlp/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl.zip"
+
+    ventana = tk.Tk()
+    ventana.title("Installing dependencies")
+    ventana.geometry("500x180")
+    ventana.resizable(False, False)
+    ventana.eval('tk::PlaceWindow . center')
+
+    tk.Label(
+        ventana,
+        text="Installing required dependencies...",
+        font=("Arial", 12, "bold")
+    ).pack(pady=15)
+
+    label_estado = tk.Label(
+        ventana,
+        text="Downloading FFmpeg...",
+        font=("Arial", 10)
+    )
+    label_estado.pack(pady=5)
+
+    progress = ttk.Progressbar(ventana, length=400, mode='determinate')
+    progress.pack(pady=10)
+
+    label_detalle = tk.Label(
+        ventana,
+        text="This is a one-time setup",
+        font=("Arial", 9),
+        fg="gray"
+    )
+    label_detalle.pack(pady=5)
+
+    instalacion_ok = [False]
+
+    def descargar_ffmpeg():
+        global ffmpeg_location
+        try:
+            APP_DATA_DIR.mkdir(parents=True, exist_ok=True)
+            zip_path = APP_DATA_DIR / "ffmpeg.zip"
+
+            # Descargar con progreso
+            req = urllib.request.Request(FFMPEG_URL)
+            req.add_header('User-Agent', 'YTDownloader4K')
+
+            with urllib.request.urlopen(req, timeout=60) as response:
+                total = int(response.headers.get('Content-Length', 0))
+                descargado = 0
+                bloque = 1024 * 256  # 256KB
+
+                with open(zip_path, 'wb') as f:
+                    while True:
+                        datos = response.read(bloque)
+                        if not datos:
+                            break
+                        f.write(datos)
+                        descargado += len(datos)
+
+                        if total > 0:
+                            porcentaje = (descargado / total) * 80  # 80% para descarga
+                            progress['value'] = porcentaje
+                            mb_desc = descargado / (1024 * 1024)
+                            mb_total = total / (1024 * 1024)
+                            label_detalle.config(
+                                text=f"Downloading: {mb_desc:.1f} MB / {mb_total:.1f} MB"
+                            )
+                        ventana.update_idletasks()
+
+            # Extraer
+            label_estado.config(text="Extracting FFmpeg...")
+            label_detalle.config(text="Almost done...")
+            progress['value'] = 85
+            ventana.update_idletasks()
+
+            FFMPEG_DIR.mkdir(parents=True, exist_ok=True)
+
+            with zipfile.ZipFile(zip_path, 'r') as zf:
+                # Buscar ffmpeg.exe y ffprobe.exe dentro del zip
+                for nombre in zf.namelist():
+                    basename = os.path.basename(nombre)
+                    if basename in ('ffmpeg.exe', 'ffprobe.exe'):
+                        # Extraer al directorio de ffmpeg
+                        datos = zf.read(nombre)
+                        destino = FFMPEG_DIR / basename
+                        with open(destino, 'wb') as f:
+                            f.write(datos)
+
+            progress['value'] = 95
+            ventana.update_idletasks()
+
+            # Limpiar zip
+            zip_path.unlink(missing_ok=True)
+
+            # Verificar
+            if (FFMPEG_DIR / "ffmpeg.exe").exists():
+                ffmpeg_location = str(FFMPEG_DIR)
+                instalacion_ok[0] = True
+                progress['value'] = 100
+                label_estado.config(text="✓ FFmpeg installed successfully", fg="green")
+                label_detalle.config(text="Ready to use", fg="green")
+                ventana.update_idletasks()
+                ventana.after(1500, ventana.destroy)
+            else:
+                raise Exception("FFmpeg files not found after extraction")
+
+        except Exception as e:
+            label_estado.config(text="⚠ Error installing FFmpeg", fg="red")
+            label_detalle.config(text=str(e)[:60], fg="red")
+            ventana.update_idletasks()
+            ventana.after(4000, ventana.destroy)
+
+    thread = threading.Thread(target=descargar_ffmpeg, daemon=True)
+    thread.start()
+
+    ventana.mainloop()
+    return instalacion_ok[0]
+
+
+def verificar_dependencias():
+    """Verifica que todas las dependencias estén disponibles."""
+    if not ffmpeg_disponible():
+        if not instalar_ffmpeg():
+            messagebox.showwarning(
+                "Warning",
+                "FFmpeg could not be installed.\n\n"
+                "Video merging and MP3 conversion may not work.\n"
+                "You can install it manually from:\n"
+                "https://ffmpeg.org/download.html"
+            )
+
+
 def verificar_actualizacion_app():
     """Verifica si hay una nueva versión disponible en GitHub."""
     GITHUB_REPO = "ZabaHD4K/DescargadorYT"
     VERSION_URL = f"https://raw.githubusercontent.com/{GITHUB_REPO}/main/version.txt"
     DOWNLOAD_URL = f"https://github.com/{GITHUB_REPO}/raw/main/YTDownloader4k.exe"
-    
-    # Solo verificar si se está ejecutando como .exe
+
     if not getattr(sys, 'frozen', False):
-        return  # No hacer nada si se ejecuta desde Python directamente
-    
+        return
+
     try:
-        # Obtener la última versión desde GitHub
         req = urllib.request.Request(VERSION_URL)
         req.add_header('User-Agent', 'YTDownloader4K')
-        
+
         with urllib.request.urlopen(req, timeout=5) as response:
             latest_version = response.read().decode().strip()
             current_version = __version__
-            
-            # Comparar versiones
+
             if latest_version != current_version:
-                # Hay una nueva versión disponible
                 ventana_update = tk.Tk()
                 ventana_update.title("Update Available")
                 ventana_update.geometry("450x200")
                 ventana_update.resizable(False, False)
                 ventana_update.eval('tk::PlaceWindow . center')
-                
+
                 tk.Label(
                     ventana_update,
-                    text=f"New version available!",
+                    text="New version available!",
                     font=("Arial", 13, "bold"),
                     fg="#2e7d32"
                 ).pack(pady=15)
-                
+
                 tk.Label(
                     ventana_update,
                     text=f"Current version: v{current_version}  →  New version: v{latest_version}",
                     font=("Arial", 10)
                 ).pack(pady=5)
-                
+
                 tk.Label(
                     ventana_update,
                     text="Your browser will open to download the update.",
                     font=("Arial", 9),
                     fg="gray"
                 ).pack(pady=5)
-                
+
                 def ir_a_descarga():
                     webbrowser.open(DOWNLOAD_URL)
                     ventana_update.destroy()
-                
+
                 def omitir():
                     ventana_update.destroy()
-                
+
                 frame_botones = tk.Frame(ventana_update)
                 frame_botones.pack(pady=20)
-                
+
                 tk.Button(
                     frame_botones,
                     text="Download Update",
@@ -127,7 +278,7 @@ def verificar_actualizacion_app():
                     font=("Arial", 10, "bold"),
                     width=20
                 ).pack(side="left", padx=5)
-                
+
                 tk.Button(
                     frame_botones,
                     text="Skip",
@@ -137,28 +288,24 @@ def verificar_actualizacion_app():
                     font=("Arial", 10),
                     width=12
                 ).pack(side="left", padx=5)
-                
+
                 ventana_update.mainloop()
-                
-    except Exception as e:
-        # Si hay algún error al verificar, simplemente continuar sin actualizar
+
+    except Exception:
         pass
 
 
 def verificar_actualizaciones():
     """Verifica y actualiza las librerías necesarias (solo cuando se ejecuta desde Python)."""
-    # Si es .exe, las librerías van empaquetadas — la actualización es via app update
     if getattr(sys, 'frozen', False):
         return
 
-    # Comprobar que pip está disponible
     try:
         subprocess.run(
             [sys.executable, "-m", "pip", "--version"],
             capture_output=True, text=True, timeout=10
         ).check_returncode()
     except Exception:
-        # Sin pip no podemos actualizar, continuar sin más
         return
 
     ventana_actualizacion = tk.Tk()
@@ -197,7 +344,6 @@ def verificar_actualizaciones():
     label_detalle.pack(pady=5)
 
     def actualizar_librerias():
-        """Función que ejecuta la actualización en segundo plano."""
         dependencias = ['yt-dlp', 'Pillow']
         actualizaciones_realizadas = []
 
@@ -262,10 +408,19 @@ def verificar_actualizaciones():
     ventana_actualizacion.mainloop()
 
 
-# Ejecutar verificación de actualizaciones de la aplicación
-verificar_actualizacion_app()
+def obtener_opciones_ydl(extras=None):
+    """Devuelve opciones base de yt-dlp con ffmpeg_location si es necesario."""
+    opts = {}
+    if ffmpeg_location:
+        opts["ffmpeg_location"] = ffmpeg_location
+    if extras:
+        opts.update(extras)
+    return opts
 
-# Ejecutar verificación de actualizaciones de librerías
+
+# Ejecutar verificaciones al inicio
+verificar_actualizacion_app()
+verificar_dependencias()
 verificar_actualizaciones()
 
 
@@ -277,31 +432,30 @@ info_video = None
 def cargar_video():
     """Carga la información del video y muestra formatos disponibles."""
     global formatos_disponibles, info_video
-    
+
     url = entry_url.get().strip()
     if not url:
         messagebox.showwarning("Error", "Please enter a YouTube URL.")
         return
-    
+
     btn_cargar.config(state="disabled", text="Loading...")
     combo_resolucion.set("")
     combo_resolucion["values"] = []
-    
+
     def cargar():
         global formatos_disponibles, info_video
         try:
-            # Usar yt_dlp como librería para obtener TODOS los formatos incluyendo DASH
-            ydl_opts = {
+            ydl_opts = obtener_opciones_ydl({
                 "quiet": True,
                 "no_warnings": True,
                 "nocheckcertificate": True,
                 "geo_bypass": True,
                 "socket_timeout": 15,
-            }
+            })
 
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                 info_video = ydl.extract_info(url, download=False)
-            
+
             # Cargar miniatura
             try:
                 thumbnail_url = info_video.get('thumbnail')
@@ -312,31 +466,27 @@ def cargar_video():
                     photo = ImageTk.PhotoImage(img)
                     label_thumbnail.config(image=photo)
                     label_thumbnail.image = photo
-            except:
+            except Exception:
                 pass
-            
-            # Procesar formatos - obtener TODOS los formatos de video disponibles
+
+            # Procesar formatos
             formatos_video = {}
-            
+
             for f in info_video.get('formats', []):
-                # Solo formatos con video
                 tiene_video = f.get('vcodec') not in ['none', None]
                 height = f.get('height')
-                
+
                 if tiene_video and height:
                     vcodec = f.get('vcodec', 'unknown')
-                    # Limpiar nombre del codec
                     if '.' in vcodec:
                         vcodec = vcodec.split('.')[0]
                     vcodec = vcodec[:4]
-                    
+
                     fps = f.get('fps', 30) or 30
                     format_id = f['format_id']
-                    
-                    # Crear clave única por resolución, codec y fps
+
                     key = f"{height}_{vcodec}_{fps}"
-                    
-                    # Guardar si no existe o si tiene mejor bitrate
+
                     if key not in formatos_video:
                         formatos_video[key] = {
                             'height': height,
@@ -345,34 +495,31 @@ def cargar_video():
                             'vcodec': vcodec,
                             'label': f"{height}p ({vcodec}, {fps}fps)"
                         }
-            
-            # Ordenar por resolución descendente, luego por FPS
+
             formatos_disponibles = sorted(
-                formatos_video.values(), 
-                key=lambda x: (x['height'], x['fps']), 
+                formatos_video.values(),
+                key=lambda x: (x['height'], x['fps']),
                 reverse=True
             )
-            
-            # Agregar opción de audio
+
             formatos_disponibles.append({
                 'height': 0,
                 'format_id': 'bestaudio',
                 'label': 'Audio Only (MP3)'
             })
-            
-            # Actualizar combobox
+
             opciones = [f['label'] for f in formatos_disponibles]
             combo_resolucion["values"] = opciones
             if opciones:
                 combo_resolucion.current(0)
-            
+
             btn_cargar.config(state="normal", text="Load Video")
             btn_descargar.config(state="normal")
-            
+
         except Exception as e:
             messagebox.showerror("Error", f"Could not load video:\n\n{str(e)}")
             btn_cargar.config(state="normal", text="Load Video")
-    
+
     thread = threading.Thread(target=cargar, daemon=True)
     thread.start()
 
@@ -382,25 +529,24 @@ def descargar_video():
     if not info_video or not formatos_disponibles:
         messagebox.showwarning("Error", "Load a video first.")
         return
-    
+
     seleccion_idx = combo_resolucion.current()
     if seleccion_idx < 0:
         messagebox.showwarning("Error", "Select a resolution.")
         return
-    
+
     formato_sel = formatos_disponibles[seleccion_idx]
     url = entry_url.get().strip()
     carpeta_descargas = os.path.join(os.path.expanduser("~"), "Downloads")
-    
+
     btn_descargar.config(state="disabled", text="Downloading...")
     progressbar.pack(pady=5)
     label_progreso.pack(pady=2)
     progressbar['value'] = 0
     label_progreso.config(text="Starting download...")
-    
+
     def hook_progreso(d):
         if d['status'] == 'downloading':
-            # Calcular porcentaje
             if 'total_bytes' in d:
                 total = d['total_bytes']
                 descargado = d['downloaded_bytes']
@@ -411,11 +557,9 @@ def descargar_video():
                 porcentaje = (descargado / total) * 100
             else:
                 porcentaje = 0
-            
-            # Actualizar barra
+
             progressbar['value'] = porcentaje
-            
-            # Calcular tiempo estimado
+
             if 'eta' in d and d['eta']:
                 eta = d['eta']
                 minutos = eta // 60
@@ -429,18 +573,17 @@ def descargar_video():
                     label_progreso.config(text=f"Downloading: {porcentaje:.1f}% | Remaining: {tiempo_str}")
             else:
                 label_progreso.config(text=f"Downloading: {porcentaje:.1f}%")
-            
+
             root.update_idletasks()
         elif d['status'] == 'finished':
             progressbar['value'] = 100
             label_progreso.config(text="Processing file...")
             root.update_idletasks()
-    
+
     def descargar():
         try:
-            # Configurar opciones según selección
             if formato_sel['height'] == 0:  # Audio MP3
-                opciones = {
+                opciones = obtener_opciones_ydl({
                     "format": "bestaudio/best",
                     "outtmpl": os.path.join(carpeta_descargas, "%(title)s.%(ext)s"),
                     "postprocessors": [{
@@ -451,48 +594,43 @@ def descargar_video():
                     "noplaylist": True,
                     "nocheckcertificate": True,
                     "progress_hooks": [hook_progreso],
-                }
+                })
             else:  # Video
-                # Intentar descargar el formato específico + mejor audio
                 format_id = formato_sel['format_id']
                 height = formato_sel['height']
-                
-                opciones = {
-                    # Intentar formato específico + audio, si falla usar bestvideo de esa altura + audio
+
+                opciones = obtener_opciones_ydl({
                     "format": f"{format_id}+bestaudio/bestvideo[height={height}]+bestaudio/best[height={height}]",
                     "merge_output_format": "mkv",
                     "outtmpl": os.path.join(carpeta_descargas, f"%(title)s [{height}p].mkv"),
                     "noplaylist": True,
                     "nocheckcertificate": True,
                     "progress_hooks": [hook_progreso],
-                }
-            
-            # Opciones comunes
+                })
+
             opciones.update({
                 "noplaylist": True,
                 "quiet": False,
                 "nocheckcertificate": True,
                 "geo_bypass": True,
-                # NO usar ios/android en descarga, dejar que yt-dlp use el método por defecto
             })
-            
-            # Descargar
+
             with yt_dlp.YoutubeDL(opciones) as ydl:
                 ydl.download([url])
-            
+
             progressbar['value'] = 100
             label_progreso.config(text="✓ Download complete")
             btn_descargar.config(state="normal", text="Download")
             messagebox.showinfo("Complete", f"Downloaded to:\n{carpeta_descargas}")
             progressbar.pack_forget()
             label_progreso.pack_forget()
-            
+
         except Exception as e:
             btn_descargar.config(state="normal", text="Download")
             progressbar.pack_forget()
             label_progreso.pack_forget()
             messagebox.showerror("Error", f"Error during download:\n\n{str(e)}")
-    
+
     thread = threading.Thread(target=descargar, daemon=True)
     thread.start()
 
@@ -503,15 +641,12 @@ root.title(f"YTDownloader4K v{__version__}")
 root.geometry("520x420")
 root.resizable(False, False)
 
-# Título
 tk.Label(root, text="YouTube 4K Downloader", font=("Arial", 14, "bold")).pack(pady=10)
 
-# URL
 tk.Label(root, text="Video URL:").pack()
 entry_url = tk.Entry(root, width=60)
 entry_url.pack(pady=5)
 
-# Botón cargar
 btn_cargar = tk.Button(
     root,
     text="Load Video",
@@ -523,16 +658,13 @@ btn_cargar = tk.Button(
 )
 btn_cargar.pack(pady=10)
 
-# Miniatura
 label_thumbnail = tk.Label(root)
 label_thumbnail.pack(pady=5)
 
-# Selector de resolución
 tk.Label(root, text="Available resolution:").pack(pady=5)
 combo_resolucion = ttk.Combobox(root, state="readonly", width=40)
 combo_resolucion.pack()
 
-# Botón descargar
 btn_descargar = tk.Button(
     root,
     text="Download",
@@ -545,11 +677,9 @@ btn_descargar = tk.Button(
 )
 btn_descargar.pack(pady=10)
 
-# Barra de progreso (oculta por defecto)
 progressbar = ttk.Progressbar(root, length=400, mode='determinate')
 label_progreso = tk.Label(root, text="", font=("Arial", 9), fg="#1976d2")
 
-# Footer
 tk.Label(root, text="Folder: Downloads | Author: Alejandro Zabaleta", font=("Arial", 8), fg="gray").pack(side="bottom", pady=5)
 
 root.mainloop()
