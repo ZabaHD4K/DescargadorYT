@@ -3,19 +3,20 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python](https://img.shields.io/badge/python-3.7+-blue.svg)](https://www.python.org/downloads/)
 [![yt-dlp](https://img.shields.io/badge/powered%20by-yt--dlp-red)](https://github.com/yt-dlp/yt-dlp)
-[![Version](https://img.shields.io/badge/version-1.4.0-blue)](https://github.com/ZabaHD4K/DescargadorYT/releases)
+[![Version](https://img.shields.io/badge/version-1.6.7-blue)](https://github.com/ZabaHD4K/DescargadorYT/releases)
 
 A powerful, user-friendly YouTube video downloader with a graphical interface built with Python. Download videos in multiple qualities or extract audio only - all with a simple, intuitive GUI.
 
 ![Application Preview](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey)
 
-> **🆕 What's New in v1.4.0:**  
-> ✅ Real-time progress bar during download  
-> ✅ Video preview with thumbnail before downloading  
-> ✅ Choose from all available resolutions and codecs  
-> ✅ Visual processing indicator at completion  
-> ✅ Full English interface
-> 
+> **🆕 What's New in v1.6.7:**
+> ✅ **Full resolution coverage restored** — relies on yt-dlp's internal client selection (handles YouTube's PO token throttling automatically), fetching the complete format list up to 4K
+> ✅ **HDR detection** — HDR formats are now shown separately from SDR variants
+> ✅ **Improved codec normalization** — correctly distinguishes `vp9`, `av01`, `avc1`, `hevc`
+> ✅ **Smarter deduplication** — when multiple formats share resolution/codec/fps, the highest-bitrate one is kept
+> ✅ **Safer extraction** — single-pass extraction with 90s hard timeout to avoid UI hangs
+> ✅ Previous fixes: robust auto-update, zombie thread cleanup, playlist avoidance
+>
 > [View Full Changelog](CHANGELOG.md)
 
 <div align="center">
@@ -308,11 +309,11 @@ python descargador.py
 
 **✅ Works on any Windows without installation** - All dependencies are bundled inside the .exe file
 
-### GUI Overview (v1.4.0)
+### GUI Overview (v1.6.7)
 
 ```
 ┌────────────────────────────────────────────┐
-│   YTDownloader4K v1.4.0                    │
+│   YTDownloader4K v1.6.7                    │
 │   YouTube 4K Downloader                    │
 │                                            │
 │   Video URL:                               │
@@ -441,7 +442,7 @@ pyinstaller \
 ```
 YTDownloader4k/
 ├── YTDownloader4k.exe      # ⭐ Ready-to-use executable (download this!)
-├── version.txt             # Current version for update checks (1.3.3)
+├── version.txt             # Current version for update checks (1.6.7)
 ├── README.md               # This file
 ├── CHANGELOG.md            # Version history and changes
 ├── .gitignore              # Git ignore rules

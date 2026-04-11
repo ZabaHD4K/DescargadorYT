@@ -7,7 +7,7 @@ Description: A user-friendly YouTube downloader with GUI
 License: MIT
 """
 
-__version__ = "1.6.5"
+__version__ = "1.6.7"
 
 import yt_dlp
 import tkinter as tk
@@ -561,60 +561,38 @@ def cargar_video():
     def cargar():
         global formatos_disponibles, info_video
         try:
-            # Lanzar 2 extracciones en paralelo con distintos clients
-            # El primero que responda gana, el otro se descarta
+            # Una sola extracción con los defaults de yt-dlp. Forzar player_client
+            # manualmente (web/android/tv/...) falla porque YouTube exige PO tokens
+            # para la mayoría de clientes; yt-dlp maneja internamente qué clientes
+            # usar para obtener la lista completa de formatos.
             import concurrent.futures
 
-            opts_default = obtener_opciones_ydl({
+            opts = obtener_opciones_ydl({
                 "quiet": True,
                 "no_warnings": True,
                 "nocheckcertificate": True,
                 "geo_bypass": True,
                 "socket_timeout": 30,
-                "extractor_retries": 1,
-                "retries": 1,
+                "extractor_retries": 2,
+                "retries": 2,
                 "noplaylist": True,
             })
 
-            opts_android = obtener_opciones_ydl({
-                "quiet": True,
-                "no_warnings": True,
-                "nocheckcertificate": True,
-                "geo_bypass": True,
-                "socket_timeout": 30,
-                "extractor_retries": 1,
-                "retries": 1,
-                "noplaylist": True,
-                "extractor_args": {"youtube": {"player_client": ["android"]}},
-            })
-
-            def extraer_con_opts(opts):
+            def extraer():
                 with yt_dlp.YoutubeDL(opts) as ydl:
                     return ydl.extract_info(url, download=False)
 
-            with concurrent.futures.ThreadPoolExecutor(max_workers=2) as pool:
-                futuro_default = pool.submit(extraer_con_opts, opts_default)
-                futuro_android = pool.submit(extraer_con_opts, opts_android)
+            # Timeout de 90s usando un hilo ejecutor para no bloquear la UI si
+            # yt-dlp se cuelga por problemas de red o extractor
+            with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
+                futuro = pool.submit(extraer)
+                try:
+                    resultado_info = futuro.result(timeout=90)
+                except concurrent.futures.TimeoutError:
+                    futuro.cancel()
+                    raise Exception("Timeout: video extraction took longer than 90s. Check your connection or try again.")
 
-                futuros = {futuro_default: "default", futuro_android: "android"}
-                resultado_info = None
-                errores = []
-
-                for futuro in concurrent.futures.as_completed(futuros, timeout=90):
-                    try:
-                        resultado_info = futuro.result()
-                        if resultado_info:
-                            # Tenemos resultado, cancelar el otro
-                            for f in futuros:
-                                if f is not futuro:
-                                    f.cancel()
-                            break
-                    except Exception as e:
-                        errores.append(f"{futuros[futuro]}: {e}")
-
-            if resultado_info is None:
-                if errores:
-                    raise Exception("Could not load video:\n\n" + "\n".join(errores))
+            if not resultado_info:
                 raise Exception("Could not retrieve video information. The URL may be invalid or the video may be private.")
 
             info_video = resultado_info
@@ -635,6 +613,23 @@ def cargar_video():
                 pass
 
             # Procesar formatos
+            def familia_codec(vcodec_raw):
+                """Normaliza el vcodec a una familia legible: vp9, av01, avc1, etc."""
+                if not vcodec_raw or vcodec_raw == 'none':
+                    return 'unknown'
+                base = vcodec_raw.split('.')[0].lower()
+                if base.startswith('avc'):
+                    return 'avc1'
+                if base.startswith('av01') or base == 'av1':
+                    return 'av01'
+                if base.startswith('vp9') or base == 'vp09':
+                    return 'vp9'
+                if base.startswith('vp8'):
+                    return 'vp8'
+                if base.startswith('hev') or base == 'h265':
+                    return 'hevc'
+                return base[:5]
+
             formatos_video = {}
 
             for f in info_video.get('formats', []):
@@ -642,27 +637,40 @@ def cargar_video():
                 height = f.get('height')
 
                 if tiene_video and height:
-                    vcodec = f.get('vcodec', 'unknown')
-                    if '.' in vcodec:
-                        vcodec = vcodec.split('.')[0]
-                    vcodec = vcodec[:4]
+                    vcodec = familia_codec(f.get('vcodec'))
+                    fps = int(f.get('fps') or 30)
+                    format_id = f.get('format_id')
+                    if not format_id:
+                        continue
 
-                    fps = f.get('fps', 30) or 30
-                    format_id = f['format_id']
-                    key = f"{height}_{vcodec}_{fps}"
+                    # HDR / dynamic range para no colapsar SDR y HDR en la misma key
+                    dynamic_range = (f.get('dynamic_range') or 'SDR').upper()
+                    key = f"{height}_{vcodec}_{fps}_{dynamic_range}"
 
-                    if key not in formatos_video:
-                        formatos_video[key] = {
-                            'height': height,
-                            'format_id': format_id,
-                            'fps': fps,
-                            'vcodec': vcodec,
-                            'label': f"{height}p ({vcodec}, {fps}fps)"
-                        }
+                    # Preferir el formato con mayor tbr (bitrate) si hay choque
+                    tbr = f.get('tbr') or 0
+                    existente = formatos_video.get(key)
+                    if existente and existente.get('_tbr', 0) >= tbr:
+                        continue
+
+                    etiqueta = f"{height}p ({vcodec}, {fps}fps"
+                    if dynamic_range and dynamic_range != 'SDR':
+                        etiqueta += f", {dynamic_range}"
+                    etiqueta += ")"
+
+                    formatos_video[key] = {
+                        'height': height,
+                        'format_id': format_id,
+                        'fps': fps,
+                        'vcodec': vcodec,
+                        'dynamic_range': dynamic_range,
+                        '_tbr': tbr,
+                        'label': etiqueta,
+                    }
 
             formatos_disponibles = sorted(
                 formatos_video.values(),
-                key=lambda x: (x['height'], x['fps']),
+                key=lambda x: (x['height'], x['fps'], 0 if x['dynamic_range'] == 'SDR' else 1, x.get('_tbr', 0)),
                 reverse=True
             )
 
