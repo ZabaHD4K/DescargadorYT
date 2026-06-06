@@ -7,7 +7,7 @@ Description: A user-friendly YouTube downloader with GUI
 License: MIT
 """
 
-__version__ = "1.6.8"
+__version__ = "1.6.9"
 
 import yt_dlp
 import tkinter as tk
@@ -280,8 +280,8 @@ def verificar_actualizacion_app():
         def descargar_y_reemplazar():
             try:
                 exe_actual = Path(sys.executable)
-                exe_destino = exe_actual.parent / f"YTDownloader4k_v{latest_version}.exe"
-                exe_nuevo = exe_actual.parent / "YTDownloader4k_update.exe"
+                # Descargar a un temporal en la misma carpeta
+                exe_tmp = exe_actual.parent / "_YTDownloader4k_update.exe"
 
                 # Descargar nuevo exe con progreso
                 req_dl = urllib.request.Request(EXE_DOWNLOAD_URL)
@@ -292,7 +292,7 @@ def verificar_actualizacion_app():
                     descargado = 0
                     bloque = 1024 * 256
 
-                    with open(exe_nuevo, 'wb') as f:
+                    with open(exe_tmp, 'wb') as f:
                         while True:
                             datos = resp.read(bloque)
                             if not datos:
@@ -311,44 +311,43 @@ def verificar_actualizacion_app():
                             ventana.update_idletasks()
 
                 # Verificar que se descargó correctamente (mínimo 1MB)
-                if exe_nuevo.stat().st_size < 1_000_000:
+                if exe_tmp.stat().st_size < 1_000_000:
                     raise Exception("Downloaded file is too small, may be corrupted")
 
                 progress['value'] = 100
                 label_estado.config(text="Restarting with new version...", fg="green")
                 ventana.update_idletasks()
 
-                # Crear script .bat que:
-                # 1. Espera a que el proceso muera (reintenta hasta 10 veces)
-                # 2. Borra TODOS los exe viejos de YTDownloader4k
-                # 3. Renombra el nuevo
-                # 4. Lanza el nuevo exe
+                # Script .bat que reemplaza el exe en la MISMA ruta con el
+                # MISMO nombre, para que el usuario no note el cambio.
+                # 1. Espera a que el proceso actual muera
+                # 2. Borra el exe viejo (misma ruta exacta)
+                # 3. Mueve el temporal al mismo sitio y nombre
+                # 4. Lanza el nuevo exe desde la misma ruta
                 # 5. Se borra a sí mismo
-                carpeta = exe_actual.parent
-                bat_path = carpeta / "_update.bat"
+                bat_path = exe_actual.parent / "_update.bat"
                 bat_contenido = f'''@echo off
 setlocal
 
 set "RETRIES=0"
 :WAIT_LOOP
-tasklist /FI "IMAGENAME eq {exe_actual.name}" 2>NUL | find /I "{exe_actual.name}" >NUL
+tasklist /FI "PID eq {os.getpid()}" 2>NUL | find /I "{os.getpid()}" >NUL
 if not errorlevel 1 (
     set /a RETRIES+=1
-    if %RETRIES% GEQ 10 goto FORCE_KILL
+    if %RETRIES% GEQ 15 goto FORCE_KILL
     ping 127.0.0.1 -n 2 > nul
     goto WAIT_LOOP
 )
 goto DO_UPDATE
 
 :FORCE_KILL
-taskkill /F /IM "{exe_actual.name}" > nul 2>&1
-ping 127.0.0.1 -n 2 > nul
+taskkill /F /PID {os.getpid()} > nul 2>&1
+ping 127.0.0.1 -n 3 > nul
 
 :DO_UPDATE
-del /F /Q "{carpeta}\\YTDownloader4k_v*.exe" > nul 2>&1
-del /F /Q "{carpeta}\\YTDownloader4k.exe" > nul 2>&1
-move /Y "{exe_nuevo}" "{exe_destino}"
-start "" "{exe_destino}"
+del /F /Q "{exe_actual}" > nul 2>&1
+move /Y "{exe_tmp}" "{exe_actual}"
+start "" "{exe_actual}"
 del "%~f0"
 '''
                 bat_path.write_text(bat_contenido)
@@ -365,8 +364,8 @@ del "%~f0"
             except Exception as e:
                 # Limpiar archivo parcial
                 try:
-                    exe_nuevo = Path(sys.executable).parent / "YTDownloader4k_update.exe"
-                    exe_nuevo.unlink(missing_ok=True)
+                    exe_tmp = Path(sys.executable).parent / "_YTDownloader4k_update.exe"
+                    exe_tmp.unlink(missing_ok=True)
                 except Exception:
                     pass
 
