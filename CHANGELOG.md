@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [1.7.2] - 2026-08-24
+
+### 🐛 Fixed
+- **Menos "Failed to load Python DLL" al auto-actualizar**: el `.bat` de reemplazo espera
+  ahora ~5s (antes ~2s) antes de relanzar el exe nuevo, dando tiempo a que el sistema de
+  archivos y el antivirus liberen el binario recién movido antes de que el bootloader
+  onefile extraiga sus DLLs. Si aun así apareciera el aviso, basta con reabrir la app.
+
+---
+
 ## [1.7.1] - 2026-08-24
 
 ### 🐛 Fixed
