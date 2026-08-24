@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [1.7.3] - 2026-08-24
+
+### 🔧 Changed
+- **Auto-actualización más limpia**: los archivos temporales del proceso de update
+  (`.bat`, exe descargado y backup `.bak`) se crean ahora en `%TEMP%` en vez de en la
+  carpeta del exe, así que **ya no aparecen en el escritorio** del usuario.
+- **Relanzado vía `explorer.exe`** en lugar de `start`: el exe nuevo cuelga de un padre
+  válido (el Explorador), lo que evita avisos de antivirus/EDR del tipo
+  "Security validation failure: failed to obtain executable path for parent process".
+
+---
+
 ## [1.7.2] - 2026-08-24
 
 ### 🐛 Fixed
