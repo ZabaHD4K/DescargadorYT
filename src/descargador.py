@@ -26,6 +26,51 @@ import tempfile
 import traceback
 from pathlib import Path
 
+from formatos import procesar_formatos_video
+
+
+def resource_path(rel):
+    """Ruta a un recurso empaquetado, tanto en el .exe (PyInstaller) como
+    ejecutando desde fuente."""
+    base = getattr(sys, '_MEIPASS', os.path.dirname(os.path.abspath(__file__)))
+    return os.path.join(base, rel)
+
+
+def _configurar_app_id():
+    """En Windows, asigna un AppUserModelID propio al proceso para que la
+    barra de tareas use el icono de la app y no el de python.exe (necesario
+    sobre todo al ejecutar desde fuente; el .exe ya lleva su icono embebido)."""
+    try:
+        import ctypes
+        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("Zabalex.YTDownloader4K")
+    except Exception:
+        pass
+
+
+_configurar_app_id()
+
+
+def aplicar_icono(ventana):
+    """Aplica el icono de la app a una ventana Tk (barra de tareas + título)."""
+    try:
+        ventana.iconbitmap(resource_path('icon.ico'))
+    except Exception:
+        pass
+
+
+def formatear_bytes(n):
+    """Formatea un número de bytes como B/KB/MB/GB legible (ej. '1.24 GB')."""
+    try:
+        n = float(n)
+    except (TypeError, ValueError):
+        return "?"
+    for unidad in ('B', 'KB', 'MB', 'GB', 'TB'):
+        if n < 1024:
+            dec = 0 if unidad in ('B', 'KB') else 2
+            return f"{n:.{dec}f} {unidad}"
+        n /= 1024
+    return f"{n:.2f} PB"
+
 
 # Directorio de datos de la app
 APP_DATA_DIR = Path(os.environ.get('LOCALAPPDATA', os.path.expanduser('~'))) / "YTDownloader4k"
