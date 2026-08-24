@@ -320,11 +320,14 @@ def verificar_actualizacion_app():
 
                 # Script .bat que reemplaza el exe en la MISMA ruta con el
                 # MISMO nombre, para que el usuario no note el cambio.
-                # 1. Espera a que el proceso actual muera
-                # 2. Borra el exe viejo (misma ruta exacta)
-                # 3. Mueve el temporal al mismo sitio y nombre
-                # 4. Lanza el nuevo exe desde la misma ruta
-                # 5. Se borra a sí mismo
+                # 1. Espera a que el proceso actual muera (force-kill de reserva)
+                # 2. Renombra el exe viejo a .bak (NO lo borra todavía)
+                # 3. Mueve el nuevo al sitio y nombre exactos
+                # 4. Si el move falla -> restaura el .bak (el usuario NUNCA se
+                #    queda sin app) y arranca la versión antigua
+                # 5. Si el move va bien -> borra el .bak, lanza el nuevo exe
+                # 6. Se borra a sí mismo
+                exe_bak = f"{exe_actual}.bak"
                 bat_path = exe_actual.parent / "_update.bat"
                 bat_contenido = f'''@echo off
 setlocal
