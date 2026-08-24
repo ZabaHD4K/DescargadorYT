@@ -761,7 +761,7 @@ def descargar_video():
     def descargar():
         try:
             if formato_sel['height'] == 0:  # Audio MP3
-                opciones = obtener_opciones_ydl({
+                extra = {
                     "format": "bestaudio/best",
                     "outtmpl": os.path.join(carpeta_descargas, "%(title)s.%(ext)s"),
                     "postprocessors": [{
