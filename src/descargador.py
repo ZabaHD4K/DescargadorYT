@@ -7,7 +7,7 @@ Description: A user-friendly YouTube downloader with GUI
 License: MIT
 """
 
-__version__ = "1.7.0"
+__version__ = "1.7.1"
 
 import yt_dlp
 import tkinter as tk
@@ -385,9 +385,17 @@ def verificar_actualizacion_app():
                                 )
                             ventana.update_idletasks()
 
-                # Verificar que se descargó correctamente (mínimo 1MB)
-                if exe_tmp.stat().st_size < 1_000_000:
+                # Verificar la integridad de la descarga: debe pesar >1MB y, si
+                # el servidor informó del tamaño, coincidir EXACTAMENTE con él.
+                # Un exe truncado pasa el check de 1MB pero luego falla al arrancar
+                # con "Failed to load Python DLL".
+                tam = exe_tmp.stat().st_size
+                if tam < 1_000_000:
                     raise Exception("Downloaded file is too small, may be corrupted")
+                if total > 0 and tam != total:
+                    raise Exception(
+                        f"Incomplete download ({tam} of {total} bytes). Please try again."
+                    )
 
                 progress['value'] = 100
                 label_estado.config(text="Restarting with new version...", fg="green")
@@ -435,6 +443,10 @@ move /Y "{exe_bak}" "{exe_actual}" > nul 2>&1
 del /F /Q "{exe_tmp}" > nul 2>&1
 
 :LAUNCH
+rem Respiro para que el sistema de archivos y el antivirus liberen el exe
+rem recién movido antes de que el bootloader onefile extraiga su _MEI.
+rem Sin esto puede fallar con "Failed to load Python DLL" al relanzar.
+ping 127.0.0.1 -n 3 > nul
 start "" "{exe_actual}"
 del "%~f0"
 '''
