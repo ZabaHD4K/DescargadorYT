@@ -811,6 +811,7 @@ def descargar_video():
             btn_descargar.config(state="normal", text="Download")
             progressbar.pack_forget()
             label_progreso.pack_forget()
+            label_detalle.pack_forget()
 
     thread = threading.Thread(target=descargar, daemon=True)
     thread.start()
