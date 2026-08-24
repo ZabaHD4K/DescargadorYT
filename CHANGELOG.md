@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [1.7.1] - 2026-08-24
+
+### 🐛 Fixed
+- **Error "Failed to load Python DLL" durante la auto-actualización**: el updater ahora
+  verifica que la descarga del nuevo exe coincide **exactamente** con el tamaño anunciado
+  por el servidor (antes solo comprobaba que pesara >1 MB, y un exe truncado se instalaba
+  y fallaba al arrancar). Además, el `.bat` de reemplazo espera un instante antes de
+  relanzar, para que el sistema de archivos y el antivirus liberen el exe antes de que el
+  bootloader extraiga sus DLLs.
+
+### 📝 Docs
+- README: el botón de descarga apunta al asset del último Release
+  (`releases/latest/download/…`) en vez de a `raw/main`, y el badge de versión se actualiza.
+
+---
+
 ## [1.7.0] - 2026-08-24
 
 ### 🐛 Fixed
