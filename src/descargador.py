@@ -7,7 +7,7 @@ Description: A user-friendly YouTube downloader with GUI
 License: MIT
 """
 
-__version__ = "1.7.1"
+__version__ = "1.7.2"
 
 import yt_dlp
 import tkinter as tk
@@ -443,10 +443,10 @@ move /Y "{exe_bak}" "{exe_actual}" > nul 2>&1
 del /F /Q "{exe_tmp}" > nul 2>&1
 
 :LAUNCH
-rem Respiro para que el sistema de archivos y el antivirus liberen el exe
-rem recién movido antes de que el bootloader onefile extraiga su _MEI.
-rem Sin esto puede fallar con "Failed to load Python DLL" al relanzar.
-ping 127.0.0.1 -n 3 > nul
+rem Respiro (~5s) para que el sistema de archivos y el antivirus liberen el
+rem exe recién movido antes de que el bootloader onefile extraiga su _MEI.
+rem Sin margen suficiente falla con "Failed to load Python DLL" al relanzar.
+ping 127.0.0.1 -n 6 > nul
 start "" "{exe_actual}"
 del "%~f0"
 '''
