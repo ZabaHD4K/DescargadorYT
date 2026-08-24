@@ -503,6 +503,41 @@ def obtener_opciones_ydl(extras=None):
     return opts
 
 
+class YouTubeBloqueado(Exception):
+    """YouTube bloquea el vídeo con su muro anti-bot. Se usa para mostrar al
+    usuario un aviso amable en vez de un error técnico."""
+
+
+# Mensaje que ve el usuario cuando YouTube bloquea un vídeo concreto.
+MENSAJE_BLOQUEO = (
+    "YouTube is currently blocking this specific video with a bot check.\n\n"
+    "What you can do right now:\n"
+    "  •  Wait a few minutes and try again\n"
+    "  •  Try a different video\n\n"
+    "This is a restriction on YouTube's side and it's actively being worked on.\n\n"
+    "Want to help improve the app? Contribute on GitHub:\n"
+    f"https://github.com/{GITHUB_REPO}"
+)
+
+
+def _es_error_bot(err):
+    """True si el error de yt-dlp es el muro anti-bot de YouTube."""
+    t = str(err).lower()
+    return ("sign in to confirm" in t or "not a bot" in t
+            or ("cookies" in t and "authentication" in t))
+
+
+def ejecutar_detectando_bloqueo(accion, opts):
+    """Ejecuta `accion(opts)`; si YouTube responde con el muro anti-bot, lo
+    convierte en YouTubeBloqueado para mostrar un aviso amable."""
+    try:
+        return accion(opts)
+    except Exception as e:
+        if _es_error_bot(e):
+            raise YouTubeBloqueado(MENSAJE_BLOQUEO)
+        raise
+
+
 # ─── VERIFICACIONES AL INICIO ──────────────────────────────────────
 try:
     verificar_actualizacion_app()
