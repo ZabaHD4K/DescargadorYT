@@ -769,37 +769,36 @@ def descargar_video():
                         "preferredcodec": "mp3",
                         "preferredquality": "192",
                     }],
-                    "noplaylist": True,
-                    "nocheckcertificate": True,
-                    "progress_hooks": [hook_progreso],
-                })
+                }
             else:  # Video
                 format_id = formato_sel['format_id']
                 height = formato_sel['height']
-
-                opciones = obtener_opciones_ydl({
-                    "format": f"{format_id}+bestaudio/bestvideo[height={height}]+bestaudio/best[height={height}]",
+                extra = {
+                    "format": f"{format_id}+bestaudio/bestvideo[height={height}][protocol^=http]+bestaudio/best[height={height}][protocol^=http]/best[height={height}]",
                     "merge_output_format": "mkv",
                     "outtmpl": os.path.join(carpeta_descargas, f"%(title)s [{height}p].mkv"),
-                    "noplaylist": True,
-                    "nocheckcertificate": True,
-                    "progress_hooks": [hook_progreso],
-                })
-
-            opciones.update({
+                }
+            extra.update({
                 "noplaylist": True,
                 "quiet": False,
-                "nocheckcertificate": True,
                 "geo_bypass": True,
+                "progress_hooks": [hook_progreso],
             })
+            opciones = obtener_opciones_ydl(extra)
 
-            with yt_dlp.YoutubeDL(opciones) as ydl:
-                ydl.download([url])
+            def accion(o):
+                with yt_dlp.YoutubeDL(o) as ydl:
+                    return ydl.download([url])
+
+            # Si YouTube bloquea el vídeo (muro anti-bot) se avisa al usuario
+            ejecutar_detectando_bloqueo(accion, opciones)
 
             progressbar['value'] = 100
             label_progreso.config(text="✓ Download complete")
             messagebox.showinfo("Complete", f"Downloaded to:\n{carpeta_descargas}")
 
+        except YouTubeBloqueado as e:
+            messagebox.showwarning("Video blocked by YouTube", str(e))
         except Exception as e:
             error_msg = str(e)
             if "ffmpeg" in error_msg.lower() or "ffprobe" in error_msg.lower():
