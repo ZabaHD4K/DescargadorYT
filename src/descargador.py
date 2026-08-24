@@ -223,22 +223,26 @@ def verificar_actualizacion_app():
         return
 
     try:
-        req = urllib.request.Request(VERSION_URL)
+        req = urllib.request.Request(LATEST_RELEASE_URL)
         req.add_header('User-Agent', 'YTDownloader4K')
+        req.add_header('Accept', 'application/vnd.github+json')
 
         with urllib.request.urlopen(req, timeout=5) as response:
-            latest_version = response.read().decode().strip()
+            data = json.loads(response.read().decode())
+            latest_version = (data.get('tag_name') or '').strip().lstrip('vV')
             current_version = __version__
 
-            if latest_version == current_version:
-                return  # Ya estamos al día
+            # Comparación semver: solo actualizar si la remota es mayor
+            if not latest_version or not _hay_actualizacion(current_version, latest_version):
+                return  # Ya estamos al día (o no hay release)
 
     except Exception:
-        return  # Sin conexión, seguir sin actualizar
+        return  # Sin conexión / sin releases, seguir sin actualizar
 
     # Hay nueva versión — mostrar ventana de actualización
     ventana = tk.Tk()
     ventana.title("Update Available")
+    aplicar_icono(ventana)
     ventana.geometry("500x220")
     ventana.resizable(False, False)
     ventana.eval('tk::PlaceWindow . center')
