@@ -819,6 +819,7 @@ def descargar_video():
 # ─── INTERFAZ GRÁFICA ──────────────────────────────────────────────
 root = tk.Tk()
 root.title(f"YTDownloader4K v{__version__}")
+aplicar_icono(root)
 root.geometry("520x420")
 root.resizable(False, False)
 
