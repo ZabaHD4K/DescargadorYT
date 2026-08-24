@@ -1,2 +1,7 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+
+# El .exe es binario: sin normalización de finales de línea ni diff de texto
+*.exe binary
+*.ico binary
+*.png binary
