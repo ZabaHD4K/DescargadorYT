@@ -569,7 +569,6 @@ def cargar_video():
             opts = obtener_opciones_ydl({
                 "quiet": True,
                 "no_warnings": True,
-                "nocheckcertificate": True,
                 "geo_bypass": True,
                 "socket_timeout": 30,
                 "extractor_retries": 2,
