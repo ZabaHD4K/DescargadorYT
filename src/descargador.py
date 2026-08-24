@@ -611,67 +611,9 @@ def cargar_video():
             except Exception:
                 pass
 
-            # Procesar formatos
-            def familia_codec(vcodec_raw):
-                """Normaliza el vcodec a una familia legible: vp9, av01, avc1, etc."""
-                if not vcodec_raw or vcodec_raw == 'none':
-                    return 'unknown'
-                base = vcodec_raw.split('.')[0].lower()
-                if base.startswith('avc'):
-                    return 'avc1'
-                if base.startswith('av01') or base == 'av1':
-                    return 'av01'
-                if base.startswith('vp9') or base == 'vp09':
-                    return 'vp9'
-                if base.startswith('vp8'):
-                    return 'vp8'
-                if base.startswith('hev') or base == 'h265':
-                    return 'hevc'
-                return base[:5]
-
-            formatos_video = {}
-
-            for f in info_video.get('formats', []):
-                tiene_video = f.get('vcodec') not in ['none', None]
-                height = f.get('height')
-
-                if tiene_video and height:
-                    vcodec = familia_codec(f.get('vcodec'))
-                    fps = int(f.get('fps') or 30)
-                    format_id = f.get('format_id')
-                    if not format_id:
-                        continue
-
-                    # HDR / dynamic range para no colapsar SDR y HDR en la misma key
-                    dynamic_range = (f.get('dynamic_range') or 'SDR').upper()
-                    key = f"{height}_{vcodec}_{fps}_{dynamic_range}"
-
-                    # Preferir el formato con mayor tbr (bitrate) si hay choque
-                    tbr = f.get('tbr') or 0
-                    existente = formatos_video.get(key)
-                    if existente and existente.get('_tbr', 0) >= tbr:
-                        continue
-
-                    etiqueta = f"{height}p ({vcodec}, {fps}fps"
-                    if dynamic_range and dynamic_range != 'SDR':
-                        etiqueta += f", {dynamic_range}"
-                    etiqueta += ")"
-
-                    formatos_video[key] = {
-                        'height': height,
-                        'format_id': format_id,
-                        'fps': fps,
-                        'vcodec': vcodec,
-                        'dynamic_range': dynamic_range,
-                        '_tbr': tbr,
-                        'label': etiqueta,
-                    }
-
-            formatos_disponibles = sorted(
-                formatos_video.values(),
-                key=lambda x: (x['height'], x['fps'], 0 if x['dynamic_range'] == 'SDR' else 1, x.get('_tbr', 0)),
-                reverse=True
-            )
+            # Procesar formatos (lógica pura y testeada en tests/test_formatos.py:
+            # deduplica, descarta HLS/m3u8 y ordena por resolución).
+            formatos_disponibles = procesar_formatos_video(info_video.get('formats', []))
 
             if not formatos_disponibles:
                 raise Exception("No video formats found. The video may be restricted or unavailable.")
