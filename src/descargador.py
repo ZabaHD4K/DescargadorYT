@@ -345,8 +345,18 @@ taskkill /F /PID {os.getpid()} > nul 2>&1
 ping 127.0.0.1 -n 3 > nul
 
 :DO_UPDATE
-del /F /Q "{exe_actual}" > nul 2>&1
+del /F /Q "{exe_bak}" > nul 2>&1
+move /Y "{exe_actual}" "{exe_bak}" > nul 2>&1
 move /Y "{exe_tmp}" "{exe_actual}"
+if errorlevel 1 goto ROLLBACK
+del /F /Q "{exe_bak}" > nul 2>&1
+goto LAUNCH
+
+:ROLLBACK
+move /Y "{exe_bak}" "{exe_actual}" > nul 2>&1
+del /F /Q "{exe_tmp}" > nul 2>&1
+
+:LAUNCH
 start "" "{exe_actual}"
 del "%~f0"
 '''
