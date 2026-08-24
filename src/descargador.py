@@ -860,6 +860,7 @@ btn_descargar.pack(pady=10)
 
 progressbar = ttk.Progressbar(root, length=400, mode='determinate')
 label_progreso = tk.Label(root, text="", font=("Arial", 9), fg="#1976d2")
+label_detalle = tk.Label(root, text="", font=("Arial", 8), fg="gray")
 
 tk.Label(root, text="Folder: Downloads | Author: Alejandro Zabaleta", font=("Arial", 8), fg="gray").pack(side="bottom", pady=5)
 
