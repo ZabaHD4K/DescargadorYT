@@ -7,6 +7,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [1.7.0] - 2026-08-24
+
+### 🐛 Fixed
+- **Fallo de merge a MKV en 1080p/4K** (`Postprocessing: Conversion failed!`): yt-dlp
+  empezó a exponer formatos HLS (m3u8) duplicados de los DASH, con bitrate estimado
+  inflado que ganaba el desempate; su mp4 llega con timestamps sin definir y el
+  contenedor MKV lo rechazaba. Ahora se descartan los formatos HLS y se usan los DASH.
+- Fallback de descarga blindado con `[protocol^=http]` para no caer nunca en HLS.
+
+### 🔒 Security
+- **Verificación de certificados TLS activada**: se quitó `nocheckcertificate` de todas
+  las llamadas a yt-dlp. Antes el tráfico iba cifrado pero sin verificar el certificado
+  (riesgo de *man-in-the-middle* en WiFi pública).
+
+### ✨ Added
+- **Aviso claro cuando YouTube bloquea un vídeo** ("Sign in to confirm you're not a
+  bot"): en vez de un error técnico, la app muestra un mensaje amable pidiendo esperar
+  o probar otro vídeo, avisa de que está en desarrollo e invita a colaborar en GitHub.
+
+### 🔧 Changed
+- **Distribución vía GitHub Releases**: el .exe ya no se versiona en `main`; se publica
+  como asset del Release. El auto-updater lee la última versión de la API de releases.
+- **Comparación de versión semver** en el auto-updater (antes era igualdad de string):
+  solo actualiza si la versión remota es realmente mayor.
+- **Auto-update más seguro**: el .bat renombra el exe viejo a `.bak` y solo lo borra si
+  el reemplazo va bien; si falla, restaura el backup (el usuario nunca se queda sin app).
+- Dependencias actualizadas: yt-dlp 2026.8.19, pillow 12.3.0.
+
+### 🧰 Internal
+- Lógica de formatos extraída a `src/formatos.py` con tests de regresión
+  (`tests/test_formatos.py`).
+- CI: workflow que compila y publica el Release al pushear un tag `vX.Y.Z`.
+
+---
+
 ## [1.4.0] - 2026-02-03
 
 ### ✨ Added
