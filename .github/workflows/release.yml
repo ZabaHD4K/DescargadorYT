@@ -1,0 +1,55 @@
+name: Build and Release
+
+# Se dispara al pushear un tag de versión (p. ej. v1.7.0).
+# Compila el .exe con PyInstaller y lo publica como asset del Release,
+# de donde el auto-updater de la app lo descarga
+# (github.com/.../releases/latest/download/YTDownloader4k.exe).
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r src/requirements.txt
+          pip install pyinstaller
+
+      - name: Run tests
+        run: python -m unittest discover -s tests -v
+
+      - name: Install UPX (compresión del exe, igual que en local)
+        run: choco install upx -y
+
+      - name: Build exe
+        working-directory: src
+        run: pyinstaller YTDownloader4k.spec
+
+      - name: Generate version.txt (compat con updaters antiguos)
+        shell: bash
+        run: echo "${GITHUB_REF_NAME#v}" > version.txt
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: ${{ github.ref_name }}
+          files: |
+            src/dist/YTDownloader4k.exe
+            version.txt
+          generate_release_notes: true
