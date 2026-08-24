@@ -721,39 +721,50 @@ def descargar_video():
     btn_descargar.config(state="disabled", text="Downloading...")
     progressbar.pack(pady=5)
     label_progreso.pack(pady=2)
+    label_detalle.pack(pady=1)
     progressbar['value'] = 0
     label_progreso.config(text="Starting download...")
+    label_detalle.config(text="")
 
     def hook_progreso(d):
         try:
             if d['status'] == 'downloading':
-                if 'total_bytes' in d:
-                    porcentaje = (d['downloaded_bytes'] / d['total_bytes']) * 100
-                elif 'total_bytes_estimate' in d:
-                    porcentaje = (d['downloaded_bytes'] / d['total_bytes_estimate']) * 100
-                else:
-                    porcentaje = 0
-
+                total = d.get('total_bytes') or d.get('total_bytes_estimate') or 0
+                descargado = d.get('downloaded_bytes', 0)
+                porcentaje = (descargado / total * 100) if total else 0
                 progressbar['value'] = porcentaje
 
-                if 'eta' in d and d['eta']:
-                    eta = d['eta']
-                    minutos = eta // 60
-                    segundos = eta % 60
-                    tiempo_str = f"{int(minutos)}m {int(segundos)}s" if minutos > 0 else f"{int(segundos)}s"
-                    velocidad = d.get('speed', 0)
-                    if velocidad:
-                        velocidad_mb = velocidad / (1024 * 1024)
-                        label_progreso.config(text=f"Downloading: {porcentaje:.1f}% | {velocidad_mb:.2f} MB/s | Remaining: {tiempo_str}")
-                    else:
-                        label_progreso.config(text=f"Downloading: {porcentaje:.1f}% | Remaining: {tiempo_str}")
+                # Línea 1: porcentaje + velocidad
+                velocidad = d.get('speed', 0)
+                if velocidad:
+                    label_progreso.config(text=f"Downloading: {porcentaje:.1f}% | {velocidad / (1024 * 1024):.2f} MB/s")
                 else:
                     label_progreso.config(text=f"Downloading: {porcentaje:.1f}%")
+
+                # Línea 2: descargado / total (~ si el total es estimado) + ETA
+                if total:
+                    aprox = '~' if ('total_bytes' not in d and 'total_bytes_estimate' in d) else ''
+                    detalle = f"{formatear_bytes(descargado)} / {aprox}{formatear_bytes(total)}"
+                else:
+                    detalle = formatear_bytes(descargado)
+                eta = d.get('eta')
+                if eta:
+                    horas, resto = divmod(int(eta), 3600)
+                    minutos, segundos = divmod(resto, 60)
+                    if horas:
+                        eta_str = f"{horas}h {minutos}m"
+                    elif minutos:
+                        eta_str = f"{minutos}m {segundos}s"
+                    else:
+                        eta_str = f"{segundos}s"
+                    detalle += f"  ·  ETA {eta_str}"
+                label_detalle.config(text=detalle)
 
                 root.update_idletasks()
             elif d['status'] == 'finished':
                 progressbar['value'] = 100
                 label_progreso.config(text="Processing file...")
+                label_detalle.config(text="")
                 root.update_idletasks()
         except Exception:
             pass
