@@ -689,6 +689,8 @@ def cargar_video():
 
             btn_descargar.config(state="normal")
 
+        except YouTubeBloqueado as e:
+            messagebox.showwarning("Video blocked by YouTube", str(e))
         except Exception as e:
             error_msg = str(e)
             if not error_msg or error_msg == "None":
