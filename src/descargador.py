@@ -577,9 +577,13 @@ def cargar_video():
                 "noplaylist": True,
             })
 
-            def extraer():
-                with yt_dlp.YoutubeDL(opts) as ydl:
+            def accion(o):
+                with yt_dlp.YoutubeDL(o) as ydl:
                     return ydl.extract_info(url, download=False)
+
+            def extraer():
+                # Si YouTube bloquea el vídeo (muro anti-bot) se avisa al usuario
+                return ejecutar_detectando_bloqueo(accion, opts)
 
             # Timeout de 90s usando un hilo ejecutor para no bloquear la UI si
             # yt-dlp se cuelga por problemas de red o extractor
