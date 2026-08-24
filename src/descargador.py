@@ -7,7 +7,7 @@ Description: A user-friendly YouTube downloader with GUI
 License: MIT
 """
 
-__version__ = "1.7.2"
+__version__ = "1.7.3"
 
 import yt_dlp
 import tkinter as tk
@@ -355,8 +355,10 @@ def verificar_actualizacion_app():
         def descargar_y_reemplazar():
             try:
                 exe_actual = Path(sys.executable)
-                # Descargar a un temporal en la misma carpeta
-                exe_tmp = exe_actual.parent / "_YTDownloader4k_update.exe"
+                # Temporales en %TEMP% (NO en la carpeta del exe) para no ensuciar
+                # el escritorio del usuario con .bat / .exe / .bak durante el update.
+                tmp_dir = Path(tempfile.gettempdir())
+                exe_tmp = tmp_dir / "_YTDownloader4k_update.exe"
 
                 # Descargar nuevo exe con progreso
                 req_dl = urllib.request.Request(EXE_DOWNLOAD_URL)
@@ -410,8 +412,9 @@ def verificar_actualizacion_app():
                 #    queda sin app) y arranca la versión antigua
                 # 5. Si el move va bien -> borra el .bak, lanza el nuevo exe
                 # 6. Se borra a sí mismo
-                exe_bak = f"{exe_actual}.bak"
-                bat_path = exe_actual.parent / "_update.bat"
+                # .bak y .bat también en %TEMP% (escritorio limpio)
+                exe_bak = tmp_dir / "_YTDownloader4k_old.exe"
+                bat_path = tmp_dir / "_YTDownloader4k_update.bat"
                 bat_contenido = f'''@echo off
 setlocal
 
@@ -447,7 +450,10 @@ rem Respiro (~5s) para que el sistema de archivos y el antivirus liberen el
 rem exe recién movido antes de que el bootloader onefile extraiga su _MEI.
 rem Sin margen suficiente falla con "Failed to load Python DLL" al relanzar.
 ping 127.0.0.1 -n 6 > nul
-start "" "{exe_actual}"
+rem Relanzar vía explorer.exe: el nuevo exe cuelga de un padre válido (el
+rem Explorador, siempre vivo) en vez de un cmd/bat que se autodestruye, lo que
+rem evita quejas de EDR/antivirus del tipo "failed to obtain parent process".
+explorer.exe "{exe_actual}"
 del "%~f0"
 '''
                 bat_path.write_text(bat_contenido)
@@ -464,8 +470,7 @@ del "%~f0"
             except Exception as e:
                 # Limpiar archivo parcial
                 try:
-                    exe_tmp = Path(sys.executable).parent / "_YTDownloader4k_update.exe"
-                    exe_tmp.unlink(missing_ok=True)
+                    (Path(tempfile.gettempdir()) / "_YTDownloader4k_update.exe").unlink(missing_ok=True)
                 except Exception:
                     pass
 
