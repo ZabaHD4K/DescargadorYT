@@ -3,7 +3,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python](https://img.shields.io/badge/python-3.7+-blue.svg)](https://www.python.org/downloads/)
 [![yt-dlp](https://img.shields.io/badge/powered%20by-yt--dlp-red)](https://github.com/yt-dlp/yt-dlp)
-[![Version](https://img.shields.io/badge/version-1.6.7-blue)](https://github.com/ZabaHD4K/DescargadorYT/releases)
+[![Version](https://img.shields.io/badge/version-1.7.1-blue)](https://github.com/ZabaHD4K/DescargadorYT/releases/latest)
 
 A powerful, user-friendly YouTube video downloader with a graphical interface built with Python. Download videos in multiple qualities or extract audio only - all with a simple, intuitive GUI.
 
@@ -23,7 +23,7 @@ A powerful, user-friendly YouTube video downloader with a graphical interface bu
 
 ## 📥 Quick Download
 
-### **[⬇️ Download YTDownloader4k.exe (Windows)](https://github.com/ZabaHD4K/DescargadorYT/raw/main/YTDownloader4k.exe)**
+### **[⬇️ Download YTDownloader4k.exe (Windows)](https://github.com/ZabaHD4K/DescargadorYT/releases/latest/download/YTDownloader4k.exe)**
 
 **✨ No installation required • Works on any Windows PC • Auto-update notifications**
 
