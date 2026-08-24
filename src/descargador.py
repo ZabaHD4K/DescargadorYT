@@ -34,10 +34,36 @@ FFMPEG_DIR = APP_DATA_DIR / "ffmpeg"
 # Variable global para la ruta de ffmpeg
 ffmpeg_location = None
 
-# Constantes del repo
+# Constantes del repo. La distribución vive en GitHub Releases (no se
+# versiona el .exe en main): la última versión se lee de la API de releases
+# y el binario se descarga del asset del último release.
 GITHUB_REPO = "ZabaHD4K/DescargadorYT"
-VERSION_URL = f"https://raw.githubusercontent.com/{GITHUB_REPO}/main/version.txt"
-EXE_DOWNLOAD_URL = f"https://github.com/{GITHUB_REPO}/raw/main/YTDownloader4k.exe"
+LATEST_RELEASE_URL = f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest"
+EXE_DOWNLOAD_URL = f"https://github.com/{GITHUB_REPO}/releases/latest/download/YTDownloader4k.exe"
+
+
+def _parse_version(v):
+    """Convierte '1.7.0' (o 'v1.7.0') en tupla comparable (1, 7, 0)."""
+    partes = []
+    for p in (v or "").strip().lstrip('vV').split('.'):
+        num = ''.join(ch for ch in p if ch.isdigit())
+        partes.append(int(num) if num else 0)
+    return tuple(partes) or (0,)
+
+
+def _hay_actualizacion(actual, remota):
+    """True solo si `remota` es ESTRICTAMENTE mayor que `actual` (semver).
+
+    Evita disparar el aviso de update por diferencias no crecientes (p. ej.
+    un downgrade accidental o formatos de versión raros)."""
+    try:
+        a, r = _parse_version(actual), _parse_version(remota)
+        n = max(len(a), len(r))
+        a = a + (0,) * (n - len(a))
+        r = r + (0,) * (n - len(r))
+        return r > a
+    except Exception:
+        return False
 
 
 def mostrar_error(titulo, mensaje):
