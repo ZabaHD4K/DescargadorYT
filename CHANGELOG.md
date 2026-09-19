@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [1.7.4] - 2026-09-19
+
+### 🔧 Changed
+- **Toolchain de build actualizada**: el exe se compila ahora con PyInstaller 6.22.3
+  (antes 6.17.0) y empaqueta psutil 7.2.2. yt-dlp (2026.8.19) y Pillow (12.3.0) ya
+  estaban en su última versión.
+- **README renovado**: todos los enlaces de descarga apuntan a GitHub Releases (los
+  enlaces `raw/main/...` rotos se han eliminado), la sección de auto-actualización
+  describe el sistema real de reemplazo in-place, y se corrige que FFmpeg no va
+  dentro del exe (se descarga automáticamente en el primer arranque).
+
+---
+
 ## [1.7.3] - 2026-08-24
 
 ### 🔧 Changed

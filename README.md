@@ -1,21 +1,22 @@
 # 🎥 YTDownloader4K - YouTube Video Downloader
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Python](https://img.shields.io/badge/python-3.7+-blue.svg)](https://www.python.org/downloads/)
+[![Python](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 [![yt-dlp](https://img.shields.io/badge/powered%20by-yt--dlp-red)](https://github.com/yt-dlp/yt-dlp)
-[![Version](https://img.shields.io/badge/version-1.7.3-blue)](https://github.com/ZabaHD4K/DescargadorYT/releases/latest)
+[![Version](https://img.shields.io/badge/version-1.7.4-blue)](https://github.com/ZabaHD4K/DescargadorYT/releases/latest)
 
 A powerful, user-friendly YouTube video downloader with a graphical interface built with Python. Download videos in multiple qualities or extract audio only - all with a simple, intuitive GUI.
 
 ![Application Preview](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey)
 
-> **🆕 What's New in v1.6.7:**
-> ✅ **Full resolution coverage restored** — relies on yt-dlp's internal client selection (handles YouTube's PO token throttling automatically), fetching the complete format list up to 4K
-> ✅ **HDR detection** — HDR formats are now shown separately from SDR variants
-> ✅ **Improved codec normalization** — correctly distinguishes `vp9`, `av01`, `avc1`, `hevc`
-> ✅ **Smarter deduplication** — when multiple formats share resolution/codec/fps, the highest-bitrate one is kept
-> ✅ **Safer extraction** — single-pass extraction with 90s hard timeout to avoid UI hangs
-> ✅ Previous fixes: robust auto-update, zombie thread cleanup, playlist avoidance
+> **🆕 What's New in v1.7.4:**
+> ✅ **Updated internals** — rebuilt with the latest build toolchain and bundled libraries
+> ✅ **Seamless in-place auto-update** — the app downloads the new version and replaces itself automatically, no manual steps
+> ✅ **Cleaner updates** — update temp files now live in `%TEMP%`, so nothing is left on your desktop
+> ✅ **Antivirus/EDR-friendly relaunch** — the updated app restarts via Explorer, avoiding security warnings
+> ✅ **Hardened downloads** — update integrity is verified against the exact server-reported size
+> ✅ **Distribution via GitHub Releases** — new versions are built and published automatically by CI
+> ✅ Previous fixes: HLS/MKV merge fix, HDR detection, full resolution coverage up to 4K
 >
 > [View Full Changelog](CHANGELOG.md)
 
@@ -40,7 +41,7 @@ A powerful, user-friendly YouTube video downloader with a graphical interface bu
 - 📊 **Detailed Format Info**: View resolution, codec, and FPS for each available format
 - 📉 **Real-time Progress**: Download progress bar with speed and ETA
 - 🎵 **Audio Extraction**: Download and convert to MP3 with high quality
-- 🔄 **Auto-Update Notifications**: Alerts you when new versions are available with direct download link
+- 🔄 **Auto-Update**: Downloads and installs new versions in place — one click and the app restarts updated
 - 💾 **Smart Downloads**: Automatically saves to your Downloads folder with resolution in filename
 - 🖥️ **User-Friendly GUI**: Clean, intuitive two-step interface (Load → Select → Download)
 - 🌍 **Geo-Bypass**: Attempts to bypass geographical restrictions
@@ -118,7 +119,7 @@ sequenceDiagram
         YT-DLP->>YT-DLP: Download Video Stream
         YT-DLP->>YT-DLP: Download Audio Stream
         YT-DLP->>FFmpeg: Merge Streams
-        FFmpeg->>FileSystem: Save MP4 File
+        FFmpeg->>FileSystem: Save MKV File
     else Audio Only
         YT-DLP->>YT-DLP: Download Audio Stream
         YT-DLP->>FFmpeg: Convert to MP3
@@ -185,12 +186,12 @@ flowchart TD
 
 **No installation required!** Just download and run:
 
-1. **[⬇️ Download YTDownloader4k.exe](https://github.com/ZabaHD4K/DescargadorYT/raw/main/dist/YTDownloader4k.exe)**
+1. **[⬇️ Download YTDownloader4k.exe](https://github.com/ZabaHD4K/DescargadorYT/releases/latest/download/YTDownloader4k.exe)**
 2. **Double-click** to run
 3. **Start downloading!**
 
-✅ **Everything is included**: Python, yt-dlp, FFmpeg, and all dependencies are bundled inside the executable.  
-✅ **Works immediately** on Windows 7/8/10/11 without installing anything.  
+✅ **Everything is included**: Python, yt-dlp, and all dependencies are bundled inside the executable. FFmpeg is downloaded automatically on first run (one-time setup).  
+✅ **Works immediately** on Windows 10/11 without installing anything.  
 ✅ **Portable**: Run it from anywhere - USB drive, desktop, or any folder.  
 ✅ **No admin rights needed**: Works on restricted computers.
 
@@ -206,7 +207,7 @@ Only for developers or advanced users who want to run from Python source code.
 
 Before installation, ensure you have:
 
-1. **Python 3.7 or higher** installed
+1. **Python 3.9 or higher** installed
 2. **FFmpeg** installed on your system
 
 #### Installing FFmpeg
@@ -234,44 +235,43 @@ sudo apt install ffmpeg
 
 1. **Clone the repository:**
 ```bash
-git clone https://github.com/yourusername/YTDownloader4k.git
-cd YTDownloader4k
+git clone https://github.com/ZabaHD4K/DescargadorYT.git
+cd DescargadorYT
 ```
 
 2. **Install dependencies:**
 ```bash
-pip install -r requirements.txt
+pip install -r src/requirements.txt
 ```
 
 3. **Run the application:**
 ```bash
-python descargador.py
+python src/descargador.py
 ```
 
 ---
 
 ## 🔄 Auto-Update Feature
 
-The application includes **update notification functionality**:
+The application **updates itself in place** — no manual download needed:
 
 ### How It Works
 
-1. **On Startup**: The app checks GitHub's `version.txt` for the latest version
-2. **Version Comparison**: Compares your version with the latest available
-3. **Update Notification**: If a new version exists, you'll see a dialog with:
-   - ✅ **Download Update**: Opens your browser to download the new .exe
+1. **On Startup**: The app queries the GitHub Releases API for the latest version
+2. **Version Comparison**: Compares your version with the latest release (semantic versioning — only strictly newer versions trigger an update)
+3. **Update Dialog**: If a new version exists, you'll see a dialog with:
+   - ✅ **Update Now**: Downloads the new .exe, verifies its integrity, replaces the running app in place, and restarts it automatically
    - ⏭️ **Skip**: Continue with current version
-4. **Simple Update**: Download the new .exe and replace the old one
-5. **Library Updates**: Your dependencies (`yt-dlp`) are also kept up-to-date automatically
+4. **Safe by design**: The download is verified against the exact server-reported size, and the old exe is kept as a backup until the swap succeeds — if anything fails, the previous version is restored
 
 ### Benefits
 
-- 🔔 **Stay informed** - Know when updates are available
+- 🔁 **One-click updates** - The app replaces and restarts itself; same file, same location
 - 🛡️ **Bug fixes** - Get security and stability improvements
 - ✨ **New features** - Access the latest functionality
 - 📦 **User control** - You decide when to update
 
-**Note**: Update notifications only work with the compiled executable (.exe), not when running from Python source.
+**Note**: Auto-update only works with the compiled executable (.exe). When running from Python source, the app instead keeps its libraries (`yt-dlp`, `Pillow`) up to date via pip.
 
 ---
 
@@ -279,7 +279,7 @@ The application includes **update notification functionality**:
 
 ### Quick Start (Windows - No Installation Required!)
 
-1. **[Download YTDownloader4k.exe](https://github.com/ZabaHD4K/DescargadorYT/raw/main/dist/YTDownloader4k.exe)**
+1. **[Download YTDownloader4k.exe](https://github.com/ZabaHD4K/DescargadorYT/releases/latest/download/YTDownloader4k.exe)**
 2. **Double-click** the downloaded file (no installation needed!)
 3. **Enter** a YouTube URL and click **"Cargar Video"**
 4. **Preview** the video thumbnail and available formats
@@ -287,33 +287,33 @@ The application includes **update notification functionality**:
 6. **Click Download**
 7. **Done!** Find your file in the Downloads folder
 
-**That's it!** The app works immediately on any Windows PC without installing Python, FFmpeg, or any dependencies. Everything is included in the single executable.
+**That's it!** The app works immediately on any Windows PC without installing Python or any dependencies. FFmpeg is fetched automatically on first run.
 
 ### Running from Source (Advanced Users)
 
 ```bash
-python descargador.py
+python src/descargador.py
 ```
 
 ### Using the Executable (Windows)
 
 **Quick Download:**
-1. **[Click here to download YTDownloader4k.exe](https://github.com/ZabaHD4K/DescargadorYT/raw/main/YTDownloader4k.exe)** directly from this repo
+1. **[Click here to download YTDownloader4k.exe](https://github.com/ZabaHD4K/DescargadorYT/releases/latest/download/YTDownloader4k.exe)** from the latest GitHub Release
 2. Run `YTDownloader4k.exe` - **no installation required!**
-3. The app will notify you if updates are available
-4. Enter a YouTube URL and click **"Cargar Video"**
+3. The app will offer to auto-update itself when a new version is available
+4. Enter a YouTube URL and click **"Load Video"**
 5. View the thumbnail and available formats
 6. Select your desired resolution
 7. Click **Download**
 8. Find your file in the **Downloads** folder
 
-**✅ Works on any Windows without installation** - All dependencies are bundled inside the .exe file
+**✅ Works on any Windows without installation** - All dependencies are bundled inside the .exe file (FFmpeg downloads itself on first run)
 
-### GUI Overview (v1.6.7)
+### GUI Overview
 
 ```
 ┌────────────────────────────────────────────┐
-│   YTDownloader4K v1.6.7                    │
+│   YTDownloader4K v1.7.4                    │
 │   YouTube 4K Downloader                    │
 │                                            │
 │   Video URL:                               │
@@ -384,15 +384,15 @@ python descargador.py
 ## 🖥️ System Requirements
 
 ### For Windows Executable (Recommended)
-- **OS**: Windows 7, 8, 10, or 11 (32-bit or 64-bit)
+- **OS**: Windows 10 or 11 (64-bit)
 - **RAM**: 512 MB minimum
-- **Storage**: 100 MB + space for downloads
+- **Storage**: 200 MB + space for downloads (includes the one-time FFmpeg download)
 - **Internet**: Stable connection required
 - **NO INSTALLATION REQUIRED** - Everything is bundled in the .exe
 
 ### For Running from Source (Advanced)
-- **OS**: Windows 7+, macOS 10.12+, or Linux
-- **Python**: 3.7 or higher
+- **OS**: Windows 10+, macOS 10.15+, or Linux
+- **Python**: 3.9 or higher (yt-dlp requirement)
 - **RAM**: 512 MB
 - **Storage**: 100 MB + space for downloads
 - **Internet**: Stable connection required
@@ -407,7 +407,9 @@ python descargador.py
 
 ## 📦 Building Executable
 
-To create a standalone executable using PyInstaller:
+Official releases are built automatically by GitHub Actions: pushing a `vX.Y.Z` tag runs the tests, builds the exe with PyInstaller, and publishes it as a [GitHub Release](https://github.com/ZabaHD4K/DescargadorYT/releases) asset.
+
+To build locally:
 
 ```bash
 # Navigate to src folder
@@ -416,23 +418,10 @@ cd src
 # Install PyInstaller
 pip install pyinstaller
 
-# Build the executable
-pyinstaller --onefile --windowed --name YTDownloader4k --icon=icon.ico descargador.py
+# Build using the project's spec file (onefile, windowed, custom icon, UPX)
+pyinstaller YTDownloader4k.spec
 
 # The executable will be in the 'src/dist' folder
-# Copy it to the root
-copy dist\YTDownloader4k.exe ..
-```
-
-### Build Options Explained
-
-```bash
-pyinstaller \
-    --onefile \              # Create a single executable file
-    --windowed \             # No console window (GUI only)
-    --name YTDownloader4k \  # Name of the executable
-    --icon=icon.ico \        # Add custom icon
-    descargador.py           # Source Python file
 ```
 
 ---
@@ -440,20 +429,23 @@ pyinstaller \
 ## 📁 Project Structure
 
 ```
-YTDownloader4k/
-├── YTDownloader4k.exe      # ⭐ Ready-to-use executable (download this!)
-├── version.txt             # Current version for update checks (1.6.7)
+DescargadorYT/
+├── YTDownloader4k.exe      # Executable (compat copy; prefer the Releases download)
+├── version.txt             # Version file for pre-1.7.0 update checks
 ├── README.md               # This file
 ├── CHANGELOG.md            # Version history and changes
-├── .gitignore              # Git ignore rules
-└── src/                    # Source code folder
-    ├── descargador.py      # Main application source code
-    ├── requirements.txt    # Python dependencies (yt-dlp, pillow)
-    ├── icon.ico            # Application icon
-    ├── YTDownloader4k.spec # PyInstaller configuration
-    ├── build/              # Build artifacts (git ignored)
-    └── dist/               # Compiled outputs (git ignored)
-        └── YTDownloader4k.exe
+├── .github/workflows/
+│   └── release.yml         # CI: builds and publishes the exe on version tags
+├── src/                    # Source code folder
+│   ├── descargador.py      # Main application source code
+│   ├── formatos.py         # Format-selection logic (pure, unit-tested)
+│   ├── requirements.txt    # Python dependencies (yt-dlp, pillow)
+│   ├── icon.ico            # Application icon
+│   ├── YTDownloader4k.spec # PyInstaller configuration
+│   ├── build/              # Build artifacts (git ignored)
+│   └── dist/               # Compiled outputs (git ignored)
+└── tests/
+    └── test_formatos.py    # Regression tests for format selection
 ```
 
 ---
@@ -490,7 +482,7 @@ graph LR
 
 ## 📄 License
 
-This project is **open source** and available under the [MIT License](LICENSE).
+This project is **open source** and available under the [MIT License](https://opensource.org/licenses/MIT).
 
 ```
 MIT License
@@ -537,18 +529,21 @@ Contributions are welcome! Here's how you can help:
 
 ```bash
 # Fork and clone the repository
-git clone https://github.com/yourusername/YTDownloader4k.git
-cd YTDownloader4k
+git clone https://github.com/ZabaHD4K/DescargadorYT.git
+cd DescargadorYT
 
 # Create a virtual environment
 python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 
 # Install dependencies
-pip install -r requirements.txt
+pip install -r src/requirements.txt
 
 # Make your changes and test
-python descargador.py
+python src/descargador.py
+
+# Run the regression tests
+python -m unittest discover -s tests -v
 
 # Submit a pull request
 ```
@@ -560,10 +555,10 @@ python descargador.py
 ### Common Issues
 
 #### "FFmpeg not found"
-**Solution**: Install FFmpeg as described in the [Installation](#-installation) section.
+**Solution**: The app downloads FFmpeg automatically on first run. If that failed, restart the app to retry, or install FFmpeg manually as described in the [Installation](#-installation) section.
 
-#### "SSL Certificate Error"
-**Solution**: The app automatically uses `nocheckcertificate: True` to handle this.
+#### "Video blocked by YouTube" / bot check
+**Solution**: YouTube sometimes blocks specific videos with an anti-bot wall. Wait a few minutes and try again, or try a different video — this is a restriction on YouTube's side.
 
 #### "Video unavailable"
 **Solution**: The video might be private, deleted, or geo-restricted. Try using a VPN.
@@ -596,6 +591,6 @@ Feel free to reach out for questions, suggestions, or collaborations!
 
 **Made with ❤️ for the community**
 
-[Report Bug](https://github.com/yourusername/YTDownloader4k/issues) · [Request Feature](https://github.com/yourusername/YTDownloader4k/issues) · [Contribute](https://github.com/yourusername/YTDownloader4k/pulls)
+[Report Bug](https://github.com/ZabaHD4K/DescargadorYT/issues) · [Request Feature](https://github.com/ZabaHD4K/DescargadorYT/issues) · [Contribute](https://github.com/ZabaHD4K/DescargadorYT/pulls)
 
 </div>
