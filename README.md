@@ -3,13 +3,14 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 [![yt-dlp](https://img.shields.io/badge/powered%20by-yt--dlp-red)](https://github.com/yt-dlp/yt-dlp)
-[![Version](https://img.shields.io/badge/version-1.7.4-blue)](https://github.com/ZabaHD4K/DescargadorYT/releases/latest)
+[![Version](https://img.shields.io/badge/version-1.7.5-blue)](https://github.com/ZabaHD4K/DescargadorYT/releases/latest)
 
 A powerful, user-friendly YouTube video downloader with a graphical interface built with Python. Download videos in multiple qualities or extract audio only - all with a simple, intuitive GUI.
 
 ![Application Preview](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey)
 
-> **🆕 What's New in v1.7.4:**
+> **🆕 What's New in v1.7.5:**
+> ✅ **Fresh yt-dlp engine (2026.10.26)** — two months of YouTube extractor fixes for more reliable loading and downloads
 > ✅ **Updated internals** — rebuilt with the latest build toolchain and bundled libraries
 > ✅ **Seamless in-place auto-update** — the app downloads the new version and replaces itself automatically, no manual steps
 > ✅ **Cleaner updates** — update temp files now live in `%TEMP%`, so nothing is left on your desktop
@@ -313,7 +314,7 @@ python src/descargador.py
 
 ```
 ┌────────────────────────────────────────────┐
-│   YTDownloader4K v1.7.4                    │
+│   YTDownloader4K v1.7.5                    │
 │   YouTube 4K Downloader                    │
 │                                            │
 │   Video URL:                               │

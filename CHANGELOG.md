@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [1.7.5] - 2026-11-07
+
+### 🔧 Changed
+- **yt-dlp actualizado a 2026.10.26** (desde 2026.8.19): dos meses de arreglos de
+  extractores de YouTube — mejora la fiabilidad de la carga de formatos y las descargas.
+- **Pillow actualizado a 13.0.0** y toolchain al día (pyinstaller-hooks-contrib 2026.9).
+- **CI modernizado**: actions del workflow a sus últimas versiones (checkout v7,
+  setup-python v7, action-gh-release v3) — elimina el aviso de Node 20 deprecado.
+
+### ✅ Verificado antes de publicar
+- Tests de regresión (9/9) y smoke test real: extracción de formatos, descarga con
+  merge a MKV y extracción a MP3 funcionando con el yt-dlp nuevo.
+
+---
+
 ## [1.7.4] - 2026-09-19
 
 ### 🔧 Changed
