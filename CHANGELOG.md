@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [2.0.0] - 2026-11-09
+
+### 🚀 Nueva aplicación (beta)
+- **Reescritura completa**: motor Python local (FastAPI + yt-dlp) + interfaz Electron
+  neomórfica con modo claro/oscuro. Distribución por instalador de un clic.
+- **Auto-updates silenciosas** con descargas diferenciales (electron-updater).
+- Progreso de descarga en tiempo real por WebSocket (velocidad, ETA).
+- Selector de calidad simplificado: las 2 mejores resoluciones del vídeo + MP3.
+
+### ⚰️ Fin de vida de la v1
+- La app clásica (exe portable Tkinter) queda **congelada en v1.7.5** y no recibirá
+  más actualizaciones. Sigue descargable desde su release.
+
+---
+
 ## [1.7.5] - 2026-11-07
 
 ### 🔧 Changed
