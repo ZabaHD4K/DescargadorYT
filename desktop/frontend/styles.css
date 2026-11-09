@@ -71,7 +71,10 @@ html, body {
               inset -3px -3px 7px var(--light);
   transform: none;
 }
-.tb-close:hover { color: var(--accent); }
+/* identidad de los botones: minimizar amarillo, cerrar rojo (ambos temas) */
+#tb-min { color: #f6b93b; font-weight: 700; }
+.tb-close { color: var(--accent); }
+.tb-close:hover { color: #d60737; }
 
 /* ── toggle sol/luna (arriba a la izquierda) ── */
 .tb-theme { position: relative; -webkit-app-region: no-drag; }

@@ -1,6 +1,6 @@
 {
   "name": "ytdownloader4k-desktop",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "YTDownloader4K - frontend Electron (neomórfico) sobre backend Python local",
   "main": "main.js",
   "scripts": {
@@ -27,7 +27,9 @@
       "oneClick": true,
       "perMachine": false,
       "deleteAppDataOnUninstall": false,
-      "artifactName": "${productName}-Setup-${version}.${ext}"
+      "artifactName": "${productName}-Setup-${version}.${ext}",
+      "installerIcon": "installer.ico",
+      "uninstallerIcon": "installer.ico"
     },
     "extraResources": [
       {
