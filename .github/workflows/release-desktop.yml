@@ -1,0 +1,59 @@
+name: Build and Release Desktop (v2)
+
+# Se dispara con tags v2.x.y: compila el backend Python (PyInstaller) y el
+# frontend Electron (electron-builder), y publica el instalador + latest.yml
+# como PRERELEASE (para no pisar releases/latest, que es el canal de la app
+# clásica v1). electron-updater en la app v2 usa allowPrerelease.
+on:
+  push:
+    tags:
+      - 'v2.*'
+
+permissions:
+  contents: write
+
+jobs:
+  build-desktop:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+
+      - name: Install backend dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r desktop/backend/requirements.txt
+          pip install pyinstaller
+
+      - name: Run tests
+        run: python -m unittest discover -s tests -v
+
+      - name: Build backend exe (PyInstaller)
+        working-directory: desktop/backend
+        run: pyinstaller ytd4k-backend.spec
+
+      - name: Set up Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+
+      - name: Install frontend dependencies
+        working-directory: desktop/frontend
+        run: npm install
+
+      - name: Sync version with tag
+        working-directory: desktop/frontend
+        shell: bash
+        run: npm version --no-git-tag-version "${GITHUB_REF_NAME#v}" || true
+
+      - name: Build and publish installer (electron-builder)
+        working-directory: desktop/frontend
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npx electron-builder --win --publish always

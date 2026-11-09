@@ -4,10 +4,13 @@ name: Build and Release
 # Compila el .exe con PyInstaller y lo publica como asset del Release,
 # de donde el auto-updater de la app lo descarga
 # (github.com/.../releases/latest/download/YTDownloader4k.exe).
+# Solo tags v1.x: la app clásica (src/). Los v2.x los construye
+# release-desktop.yml y se publican como PRERELEASE para que los clientes
+# clásicos (que miran releases/latest) no intenten "actualizarse" a la v2.
 on:
   push:
     tags:
-      - 'v*'
+      - 'v1.*'
 
 permissions:
   contents: write
