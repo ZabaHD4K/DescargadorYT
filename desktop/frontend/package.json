@@ -1,6 +1,6 @@
 {
   "name": "ytdownloader4k-desktop",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "YTDownloader4K - frontend Electron (neomórfico) sobre backend Python local",
   "main": "main.js",
   "scripts": {

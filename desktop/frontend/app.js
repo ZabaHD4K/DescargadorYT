@@ -161,9 +161,64 @@ $("dl").addEventListener("click", async () => {
   }
 });
 
+// ── banner de actualización interactivo ──
+let updEstado = "idle"; // idle -> disponible -> descargando -> listo
+function updRender(datos) {
+  const caja = $("upd"), txt = $("upd-txt"), btn = $("upd-btn"),
+        bar = $("upd-bar"), fill = $("upd-fill");
+  if (datos.tipo === "disponible") {
+    updEstado = "disponible";
+    txt.textContent = `Version ${datos.version} available`;
+    btn.textContent = "Install";
+    btn.disabled = false;
+    caja.classList.remove("oculto");
+  } else if (datos.tipo === "progreso") {
+    updEstado = "descargando";
+    bar.classList.remove("oculto");
+    fill.style.width = Math.round(datos.pct) + "%";
+    txt.textContent = `Downloading update… ${Math.round(datos.pct)}%`;
+    btn.textContent = "Install";
+    btn.disabled = true;
+  } else if (datos.tipo === "listo") {
+    updEstado = "listo";
+    bar.classList.add("oculto");
+    txt.textContent = "Update ready ✓";
+    btn.textContent = "Restart";
+    btn.disabled = false;
+  } else if (datos.tipo === "error") {
+    updEstado = "idle";
+    txt.textContent = "Update failed — will retry on next launch";
+    btn.disabled = true;
+    setTimeout(() => caja.classList.add("oculto"), 6000);
+  }
+}
+if (window.updater) window.updater.onEvento(updRender);
+$("upd-btn").addEventListener("click", () => {
+  if (updEstado === "disponible") {
+    window.SIM_UPD ? window.SIM_UPD() : window.updater.descargar();
+  } else if (updEstado === "listo") {
+    if (!window.SIM_UPD) window.updater.instalar();
+  }
+});
+
 // ── modos demo (capturas automatizadas) ──
 // demo=1: carga un vídeo real y cambia a oscuro (screenshots claro+oscuro)
 // demo=2: flujo completo para el GIF — carga, selecciona y descarga de verdad
+// simulación del banner de update para verificación visual en dev:
+// npx electron . -- (con ?updtest=1) recorre disponible→descarga→listo sin red
+if (new URLSearchParams(location.search).get("updtest") === "1") {
+  window.SIM_UPD = () => {
+    let p = 0;
+    const t = setInterval(() => {
+      p += 7;
+      updRender({ tipo: "progreso", pct: Math.min(100, p) });
+      if (p >= 100) { clearInterval(t); updRender({ tipo: "listo" }); }
+    }, 180);
+  };
+  setTimeout(() => updRender({ tipo: "disponible", version: "9.9.9" }), 800);
+  setTimeout(() => $("upd-btn").click(), 2200); // pulsa Install solo
+}
+
 const DEMO = new URLSearchParams(location.search).get("demo");
 if (DEMO === "1" || DEMO === "2") {
   // demo 1 (screenshots): vídeo corto. demo 2 (GIF): vídeo grande para que

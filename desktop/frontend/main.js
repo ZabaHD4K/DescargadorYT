@@ -13,12 +13,15 @@ const BACKEND_PY = path.join(__dirname, '..', 'backend', 'server.py');
 const BACKEND_EXE = path.join(process.resourcesPath || '', 'backend', 'ytd4k-backend.exe');
 let procesoBackend = null;
 
-// auto-update (solo tiene efecto empaquetado; los Releases v2 van como
-// prerelease para no pisar el canal de la app clásica)
+// auto-update interactivo (solo empaquetado; los Releases v2 van como
+// prerelease para no pisar el canal de la app clásica). Flujo: detectar ->
+// avisar en la UI -> el usuario pulsa Install -> barra de progreso ->
+// Restart aplica la update y reabre la app.
 let autoUpdater = null;
 try {
   ({ autoUpdater } = require('electron-updater'));
   autoUpdater.allowPrerelease = true;
+  autoUpdater.autoDownload = false; // descarga solo cuando el usuario acepta
 } catch {}
 
 function ping() {
@@ -66,12 +69,30 @@ function createWindow() {
   ipcMain.on('win:min', () => win.minimize());
   ipcMain.on('win:close', () => win.close());
 
+  // ── updater -> UI (banner interactivo en el renderer) ──
+  if (autoUpdater) {
+    const avisar = (datos) => {
+      try { win.webContents.send('update:evento', datos); } catch {}
+    };
+    autoUpdater.on('update-available', (info) =>
+      avisar({ tipo: 'disponible', version: info.version }));
+    autoUpdater.on('download-progress', (p) =>
+      avisar({ tipo: 'progreso', pct: p.percent }));
+    autoUpdater.on('update-downloaded', () => avisar({ tipo: 'listo' }));
+    autoUpdater.on('error', (e) =>
+      avisar({ tipo: 'error', mensaje: String(e && e.message || e).slice(0, 120) }));
+    ipcMain.on('update:descargar', () => autoUpdater.downloadUpdate().catch(() => {}));
+    ipcMain.on('update:instalar', () => autoUpdater.quitAndInstall(true, true));
+  }
+
   // Arnés de capturas para verificación y material promocional:
   //   PROTO_SHOT=1            -> screenshots (inicio, cargado claro, cargado oscuro)
   //   PROTO_SHOT=1 PROTO_GIF=1 -> frames cada 160ms para componer un GIF del flujo
   const shotMode = !!process.env.PROTO_SHOT;
   const gifMode = !!process.env.PROTO_GIF;
-  win.loadFile('index.html', { query: shotMode ? { demo: gifMode ? '2' : '1' } : {} });
+  const updTest = !!process.env.PROTO_UPDTEST; // simular banner de update en dev
+  const query = updTest ? { updtest: '1' } : (shotMode ? { demo: gifMode ? '2' : '1' } : {});
+  win.loadFile('index.html', { query });
 
   if (shotMode) {
     const dir = process.env.PROTO_SHOT_DIR || __dirname;
@@ -119,7 +140,7 @@ app.whenReady().then(async () => {
   }
   createWindow();
   if (app.isPackaged && autoUpdater) {
-    autoUpdater.checkForUpdatesAndNotify().catch(() => {});
+    autoUpdater.checkForUpdates().catch(() => {});
   }
 });
 
