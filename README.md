@@ -3,13 +3,13 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 [![yt-dlp](https://img.shields.io/badge/powered%20by-yt--dlp-red)](https://github.com/yt-dlp/yt-dlp)
-[![Version](https://img.shields.io/badge/version-2.0.0--beta-blue)](https://github.com/ZabaHD4K/DescargadorYT/releases/tag/v2.0.0)
+[![Version](https://img.shields.io/badge/version-2.0.2--beta-blue)](https://github.com/ZabaHD4K/DescargadorYT/releases/tag/v2.0.2)
 
 Download YouTube videos up to 4K or extract MP3 audio — with a beautiful, modern desktop app.
 
 > **🆕 What's New in v2.0:**
 > ✅ **All-new neumorphic interface** — soft modern design, light & dark mode, real thumbnails
-> ✅ **Silent background auto-updates** — delta downloads, applied on next launch, zero dialogs
+> ✅ **One-click updates** — a banner tells you when there's a new version; install with live progress and restart, done
 > ✅ **New architecture** — local Python engine (FastAPI + yt-dlp) + Electron UI, real-time progress over WebSocket
 > ✅ Same trusted download engine: up to 4K, MKV merge, 192 kbps MP3
 >
@@ -19,11 +19,11 @@ Download YouTube videos up to 4K or extract MP3 audio — with a beautiful, mode
 
 ## 📥 Download
 
-### **[⬇️ Download YTDownloader4K Installer (Windows)](https://github.com/ZabaHD4K/DescargadorYT/releases/download/v2.0.0/YTDownloader4K-Setup-2.0.0.exe)**
+### **[⬇️ Download YTDownloader4K Installer (Windows)](https://github.com/ZabaHD4K/DescargadorYT/releases/download/v2.0.2/YTDownloader4K-Setup-2.0.2.exe)**
 
 **One-click install • Windows 10/11 • Auto-updates itself**
 
-[Release notes](https://github.com/ZabaHD4K/DescargadorYT/releases/tag/v2.0.0) · [Run from source](#-running-from-source)
+[Release notes](https://github.com/ZabaHD4K/DescargadorYT/releases/tag/v2.0.2) · [Run from source](#-running-from-source)
 
 <br>
 
@@ -81,7 +81,7 @@ FFmpeg is downloaded automatically on first run (one-time setup, a few seconds).
 
 ## 💻 Installation
 
-1. **[Download the installer](https://github.com/ZabaHD4K/DescargadorYT/releases/download/v2.0.0/YTDownloader4K-Setup-2.0.0.exe)**
+1. **[Download the installer](https://github.com/ZabaHD4K/DescargadorYT/releases/download/v2.0.2/YTDownloader4K-Setup-2.0.2.exe)**
 2. Windows SmartScreen may warn about an unknown publisher (the app is unsigned) → **More info → Run anyway**
 3. Installs in seconds — no admin rights needed — and opens automatically
 
@@ -106,13 +106,14 @@ Bonus: tap the **sun/moon** in the title bar to switch light/dark mode.
 
 ## 🔄 Auto-Update
 
-v2 updates itself silently:
+Updating is one click:
 
 1. On launch, the app checks GitHub Releases
-2. If there's a new version it downloads **in the background** while you work — and only the changed parts (delta updates)
-3. The update is applied automatically the next time you open the app
+2. If there's a new version, a small banner slides in: **"Version X available — Install"**
+3. Hit Install and watch the progress bar (delta downloads — only the changed parts)
+4. When it's ready, hit **Restart** — the app reopens already updated
 
-No dialogs, no manual downloads, no interruptions.
+You're always in control, and it never interrupts a download in progress.
 
 ---
 

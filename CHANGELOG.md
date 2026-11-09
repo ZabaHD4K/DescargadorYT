@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [2.0.2] - 2026-11-09
+
+### ✨ Added
+- **Flujo de actualización interactivo**: banner con botón Install, barra de progreso
+  en vivo y botón Restart que aplica la update y reabre la app.
+
+## [2.0.1] - 2026-11-09
+
+### 🎨 Changed
+- Botones de la ventana con color: minimizar amarillo y cerrar rojo (ambos temas).
+- Icono diferenciado para el instalador/desinstalador (logo con distintivo verde).
+
+---
+
 ## [2.0.0] - 2026-11-09
 
 ### 🚀 Nueva aplicación (beta)
