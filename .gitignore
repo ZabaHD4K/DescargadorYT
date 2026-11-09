@@ -10,3 +10,10 @@ dist/
 # El .exe se distribuye vía GitHub Releases, no se versiona el build local
 _YTDownloader4k_update.exe
 *.exe.bak
+
+# Plataforma local de prototipos de diseño (solo pruebas, no se versiona)
+prototipos/
+
+# Dependencias del frontend Electron (desktop/)
+node_modules/
+package-lock.json

@@ -1,0 +1,47 @@
+{
+  "name": "ytdownloader4k-desktop",
+  "version": "2.0.0",
+  "description": "YTDownloader4K - frontend Electron (neomórfico) sobre backend Python local",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win"
+  },
+  "author": "Alejandro Zabaleta",
+  "license": "MIT",
+  "dependencies": {
+    "electron-updater": "^6.8.1"
+  },
+  "devDependencies": {
+    "electron": "^45.2.3",
+    "electron-builder": "^26.8.1"
+  },
+  "build": {
+    "appId": "com.zabalex.ytdownloader4k",
+    "productName": "YTDownloader4K",
+    "win": {
+      "target": ["nsis"],
+      "icon": "icon.ico"
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "deleteAppDataOnUninstall": false,
+      "artifactName": "${productName}-Setup-${version}.${ext}"
+    },
+    "extraResources": [
+      {
+        "from": "../backend/dist/ytd4k-backend.exe",
+        "to": "backend/ytd4k-backend.exe"
+      }
+    ],
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "ZabaHD4K",
+        "repo": "DescargadorYT",
+        "releaseType": "prerelease"
+      }
+    ]
+  }
+}

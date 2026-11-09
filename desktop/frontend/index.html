@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>YTDownloader4K</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!-- barra de título custom (la ventana es frameless) -->
+  <div class="titlebar">
+    <button id="tb-theme" class="tb-btn tb-theme" title="Light / dark mode">
+      <svg class="icono-sol" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="2" stroke-linecap="round">
+        <circle cx="12" cy="12" r="4.4" fill="currentColor" stroke="none"/>
+        <line x1="12" y1="2.5"  x2="12" y2="5"/>
+        <line x1="12" y1="19"   x2="12" y2="21.5"/>
+        <line x1="2.5" y1="12"  x2="5"  y2="12"/>
+        <line x1="19"  y1="12"  x2="21.5" y2="12"/>
+        <line x1="5.3" y1="5.3" x2="7.1" y2="7.1"/>
+        <line x1="16.9" y1="16.9" x2="18.7" y2="18.7"/>
+        <line x1="5.3" y1="18.7" x2="7.1" y2="16.9"/>
+        <line x1="16.9" y1="7.1" x2="18.7" y2="5.3"/>
+      </svg>
+      <svg class="icono-luna" viewBox="0 0 24 24">
+        <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z" fill="currentColor"/>
+      </svg>
+    </button>
+    <div class="tb-botones">
+      <button id="tb-min" class="tb-btn" title="Minimize">–</button>
+      <button id="tb-close" class="tb-btn tb-close" title="Close">×</button>
+    </div>
+  </div>
+
+  <main class="app">
+    <header>
+      <h1>YTDownloader4K</h1>
+      <p class="tagline">s o f t &nbsp;·&nbsp; l i g h t &nbsp;·&nbsp; c a l m</p>
+    </header>
+
+    <div class="entry neo-inset">
+      <input id="url" type="text" spellcheck="false"
+             placeholder="Paste a YouTube link…" />
+    </div>
+
+    <button id="load" class="neo-btn">Load Video</button>
+
+    <p id="estado" class="estado"></p>
+
+    <!-- tarjeta de vídeo (aparece al cargar) -->
+    <section id="video" class="video oculto">
+      <div class="thumb neo-raised">
+        <img id="thumb-img" class="thumb-img" alt="video thumbnail" />
+        <span id="dur" class="dur"></span>
+      </div>
+      <div class="meta">
+        <h2 id="titulo"></h2>
+        <p id="canal"></p>
+      </div>
+    </section>
+
+    <!-- chips de calidad -->
+    <div id="chips" class="chips"></div>
+
+    <!-- botón circular de descarga -->
+    <button id="dl" class="dl-circle oculto" title="Download">
+      <span class="flecha">⬇</span>
+      <span class="dl-label">download</span>
+    </button>
+
+    <!-- progreso -->
+    <section id="progreso" class="progreso oculto">
+      <div class="track neo-inset">
+        <div id="fill" class="fill"></div>
+        <div id="knob" class="knob"></div>
+      </div>
+      <p id="pct" class="pct">0%</p>
+      <p id="detalle" class="detalle"></p>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,230 @@
+/* Neomorfismo calcado del UI kit de referencia:
+   fondo azul-blanco, sombras azuladas suaves, texto navy, acento rojo-rosa. */
+:root {
+  --bg: #e3edf7;
+  --body-hi: #f9fcff;
+  --body-lo: #e9f1fa;
+  --inset: #dde7f2;
+  --dark: #a0b3cb;
+  --light: #ffffff;
+  --txt: #2e3c54;
+  --txt2: #93a6c0;
+  --accent: #ff0844;
+  --accent2: #ff7d8e;
+  --ok: #35b26f;
+  --inset-sombra: rgba(160, 179, 203, .55);
+}
+
+/* modo oscuro: mismo neomorfismo pero la "luz" es un gris elevado.
+   La clase .oscuro vive en <html> para que el fondo entero cambie. */
+html.oscuro {
+  --bg: #262b36;
+  --body-hi: #2e3442;
+  --body-lo: #222732;
+  --inset: #202531;
+  --dark: #171b24;
+  --light: #343c4c;
+  --txt: #e4eaf6;
+  --txt2: #7f8ca6;
+  --inset-sombra: rgba(8, 11, 18, .65);
+}
+
+/* transición de modo: colores y sombras se funden al cambiar las variables */
+body,
+.neo-raised, .neo-inset, .neo-btn, .chip, .dl-circle, .tb-btn,
+.titlebar, h1, .tagline, .meta h2, .meta p, .pct, .detalle, .entry input {
+  transition: background-color .45s ease, box-shadow .45s ease,
+              color .45s ease, text-shadow .45s ease;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: "Segoe UI", system-ui, sans-serif; }
+html, body {
+  height: 100%;
+  background: var(--bg); overflow: hidden; user-select: none;
+  transition: background-color .45s ease;
+}
+
+/* ── barra de título custom (ventana frameless) ── */
+.titlebar {
+  position: sticky; top: 0; z-index: 50;
+  height: 40px; padding: 0 10px 0 14px;
+  display: flex; align-items: center; justify-content: space-between;
+  background: var(--bg);
+  -webkit-app-region: drag;   /* toda la barra arrastra la ventana */
+}
+.tb-title {
+  color: var(--txt2); font-size: 11px; font-weight: 600; letter-spacing: 1px;
+}
+.tb-botones { display: flex; gap: 10px; -webkit-app-region: no-drag; }
+.tb-btn {
+  border: none; cursor: pointer;
+  width: 28px; height: 28px; border-radius: 50%;
+  color: var(--txt); font-size: 13px; line-height: 1;
+  background: linear-gradient(145deg, var(--body-hi), var(--body-lo));
+  box-shadow: 4px 4px 10px var(--dark), -4px -4px 10px var(--light);
+  transition: box-shadow .15s ease, color .15s ease, transform .15s ease;
+}
+.tb-btn:hover { transform: translateY(-1px); }
+.tb-btn:active {
+  background: var(--inset);
+  box-shadow: inset 3px 3px 7px var(--inset-sombra),
+              inset -3px -3px 7px var(--light);
+  transform: none;
+}
+.tb-close:hover { color: var(--accent); }
+
+/* ── toggle sol/luna (arriba a la izquierda) ── */
+.tb-theme { position: relative; -webkit-app-region: no-drag; }
+.tb-theme svg {
+  position: absolute; inset: 6px; width: 16px; height: 16px;
+  transition: transform .5s cubic-bezier(.34, 1.56, .64, 1), opacity .3s ease;
+}
+.icono-sol  { color: #f2a93b; transform: rotate(0) scale(1); opacity: 1; }
+.icono-luna { color: #8fa4ff; transform: rotate(-90deg) scale(0); opacity: 0; }
+html.oscuro .icono-sol  { transform: rotate(120deg) scale(0); opacity: 0; }
+html.oscuro .icono-luna { transform: rotate(0) scale(1); opacity: 1; }
+
+.app {
+  width: 100%; margin: 0 auto;
+  display: flex; flex-direction: column; align-items: center;
+  padding-top: 12px; padding-bottom: 22px; gap: 14px;
+}
+
+header { text-align: center; }
+h1 {
+  color: var(--txt); font-size: 21px; letter-spacing: .5px;
+  text-shadow: 1px 1px 0 var(--light);     /* emboss sutil */
+}
+.tagline { color: var(--txt2); font-size: 9px; margin-top: 3px; }
+
+/* ── superficies ── */
+.neo-raised {
+  background: linear-gradient(145deg, var(--body-hi), var(--body-lo));
+  border-radius: 24px;
+  box-shadow: 9px 9px 22px var(--dark), -9px -9px 22px var(--light);
+}
+.neo-inset {
+  background: var(--inset);
+  border-radius: 24px;
+  box-shadow: inset 5px 5px 12px var(--inset-sombra),
+              inset -5px -5px 12px var(--light);
+}
+
+/* ── entry ── */
+.entry { width: 360px; height: 42px; display: flex; align-items: center; border-radius: 21px; }
+.entry input {
+  flex: 1; margin: 0 16px; border: none; outline: none;
+  background: transparent; color: var(--txt);
+  font-size: 12px; text-align: center; caret-color: var(--accent);
+}
+
+/* ── botón load (se hunde al pulsar) ── */
+.neo-btn {
+  border: none; cursor: pointer;
+  width: 146px; height: 44px; border-radius: 22px;
+  color: var(--txt); font-size: 13px; font-weight: 600;
+  background: linear-gradient(145deg, var(--body-hi), var(--body-lo));
+  box-shadow: 9px 9px 22px var(--dark), -9px -9px 22px var(--light);
+  transition: box-shadow .18s ease, transform .18s ease, color .18s ease;
+}
+.neo-btn:hover { transform: translateY(-1px); }
+.neo-btn:active, .neo-btn.pulsado {
+  color: var(--accent);
+  background: var(--inset);
+  box-shadow: inset 5px 5px 12px var(--inset-sombra),
+              inset -5px -5px 12px var(--light);
+  transform: translateY(1px);
+}
+
+/* ── tarjeta de vídeo ── */
+.video {
+  display: flex; align-items: center; gap: 14px;
+  opacity: 0; transform: translateY(12px);
+  transition: opacity .5s ease, transform .5s ease;
+}
+.video.visible { opacity: 1; transform: none; }
+.thumb {
+  position: relative; width: 124px; height: 70px; border-radius: 13px;
+  overflow: hidden; flex-shrink: 0;
+}
+.thumb-img {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%; object-fit: cover;
+}
+.play {
+  position: absolute; inset: 0; display: grid; place-items: center;
+  color: #fff; font-size: 22px; text-shadow: 0 2px 8px rgba(0,0,0,.5);
+}
+.dur {
+  position: absolute; right: 7px; bottom: 5px; color: #fff;
+  font-size: 10px; font-weight: 600; background: rgba(0,0,0,.55);
+  padding: 1px 6px; border-radius: 6px;
+}
+.meta h2 { color: var(--txt); font-size: 14px; }
+.meta p { color: var(--txt2); font-size: 11px; margin-top: 3px; }
+
+/* ── chips ── */
+.chips { display: flex; gap: 10px; min-height: 38px; position: relative; }
+.chip {
+  border: none; cursor: pointer;
+  width: 76px; height: 38px; border-radius: 19px;
+  color: var(--txt); font-size: 12px; font-weight: 600;
+  background: linear-gradient(145deg, var(--body-hi), var(--body-lo));
+  box-shadow: 6px 6px 14px var(--dark), -6px -6px 14px var(--light);
+  opacity: 0; transform: translateY(10px) scale(.92);
+  transition: all .3s cubic-bezier(.34, 1.56, .64, 1); /* rebote sutil */
+}
+.chip.visible { opacity: 1; transform: none; }
+.chip.sel {
+  color: var(--accent);
+  background: var(--inset);
+  box-shadow: inset 4px 4px 10px var(--inset-sombra),
+              inset -4px -4px 10px var(--light);
+}
+
+/* ── botón circular de descarga: respiración ── */
+.dl-circle {
+  border: none; cursor: pointer;
+  width: 94px; height: 94px; border-radius: 50%;
+  background: linear-gradient(145deg, var(--body-hi), var(--body-lo));
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; gap: 2px;
+  animation: respirar 2.6s ease-in-out infinite;
+  transition: transform .15s ease;
+}
+.dl-circle:active { transform: scale(.96); }
+.dl-circle .flecha { color: var(--txt); font-size: 23px; font-weight: 700; }
+.dl-circle .dl-label { color: var(--txt2); font-size: 9px; }
+@keyframes respirar {
+  0%, 100% { box-shadow: 10px 10px 26px var(--dark), -10px -10px 26px var(--light); }
+  50%      { box-shadow: 14px 14px 34px var(--dark), -14px -14px 34px var(--light); }
+}
+.dl-circle.quieto { animation: none;
+  box-shadow: 10px 10px 26px var(--dark), -10px -10px 26px var(--light); }
+
+/* ── progreso (como el slider del kit: rojo→rosa + knob blanco) ── */
+.progreso { width: 340px; text-align: center; }
+.track { position: relative; height: 17px; border-radius: 9px; }
+.fill {
+  position: absolute; left: 3px; top: 3px; bottom: 3px; width: 0;
+  border-radius: 8px;
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+  transition: width .12s linear;
+}
+.knob {
+  position: absolute; top: 50%; left: 3px;
+  width: 22px; height: 22px; border-radius: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--light);
+  box-shadow: 3px 3px 8px var(--inset-sombra), -2px -2px 6px var(--light);
+  transition: left .12s linear;
+}
+.pct { color: var(--txt); font-size: 16px; font-weight: 700; margin-top: 9px; }
+.pct.fin { color: var(--ok); }
+.detalle { color: var(--txt2); font-size: 11px; margin-top: 3px; }
+
+/* mensajes de estado / error bajo el botón Load */
+.estado { min-height: 15px; font-size: 11px; color: var(--txt2); max-width: 420px; text-align: center; }
+.estado.error { color: var(--accent); }
+
+.oculto { display: none !important; }
