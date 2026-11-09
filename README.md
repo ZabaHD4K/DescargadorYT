@@ -25,6 +25,14 @@ Download YouTube videos up to 4K or extract MP3 audio — with a beautiful, mode
 
 [Release notes](https://github.com/ZabaHD4K/DescargadorYT/releases/tag/v2.0.0) · [Run from source](#-running-from-source)
 
+<br>
+
+<img src="docs/demo.gif" width="420" alt="YTDownloader4K in action">
+
+<br>
+
+<img src="docs/screenshot-light.png" width="330" alt="Light mode">&nbsp;&nbsp;<img src="docs/screenshot-dark.png" width="330" alt="Dark mode">
+
 </div>
 
 ---

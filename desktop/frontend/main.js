@@ -66,8 +66,12 @@ function createWindow() {
   ipcMain.on('win:min', () => win.minimize());
   ipcMain.on('win:close', () => win.close());
 
+  // Arnés de capturas para verificación y material promocional:
+  //   PROTO_SHOT=1            -> screenshots (inicio, cargado claro, cargado oscuro)
+  //   PROTO_SHOT=1 PROTO_GIF=1 -> frames cada 160ms para componer un GIF del flujo
   const shotMode = !!process.env.PROTO_SHOT;
-  win.loadFile('index.html', { query: shotMode ? { demo: '1' } : {} });
+  const gifMode = !!process.env.PROTO_GIF;
+  win.loadFile('index.html', { query: shotMode ? { demo: gifMode ? '2' : '1' } : {} });
 
   if (shotMode) {
     const dir = process.env.PROTO_SHOT_DIR || __dirname;
@@ -81,9 +85,25 @@ function createWindow() {
           console.error('error capturando', nombre, e.message);
         }
       }, ms);
-    snap('app_1_inicio.png', 1500);
-    snap('app_2_cargado.png', 9000); // la carga real tarda unos segundos
-    setTimeout(() => app.quit(), 10000);
+
+    if (gifMode) {
+      const framesDir = path.join(dir, 'frames');
+      fs.mkdirSync(framesDir, { recursive: true });
+      let i = 0;
+      const timer = setInterval(async () => {
+        try {
+          const img = await win.webContents.capturePage();
+          fs.writeFileSync(path.join(framesDir, `f${String(i++).padStart(3, '0')}.png`),
+                           img.toPNG());
+        } catch {}
+      }, 160);
+      setTimeout(() => { clearInterval(timer); console.log('frames:', i); app.quit(); }, 26000);
+    } else {
+      snap('cap_1_inicio.png', 1500);
+      snap('cap_2_claro.png', 8800);   // cargado, tema claro
+      snap('cap_3_oscuro.png', 11500); // el demo cambia a oscuro a los ~10s
+      setTimeout(() => app.quit(), 12500);
+    }
   }
 }
 

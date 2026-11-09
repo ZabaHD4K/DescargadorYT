@@ -149,6 +149,7 @@ class DownloadReq(BaseModel):
     url: str
     format_id: str | None = None   # None o "mp3" => audio MP3
     height: int | None = None
+    ratelimit: int | None = None   # bytes/s; para pruebas y demos
 
 
 @app.on_event("startup")
@@ -288,6 +289,8 @@ def _descargar(req: DownloadReq):
         }
     extra.update({"noplaylist": True, "quiet": True, "no_warnings": True,
                   "geo_bypass": True, "progress_hooks": [hook]})
+    if req.ratelimit:
+        extra["ratelimit"] = req.ratelimit
 
     try:
         with yt_dlp.YoutubeDL(opciones_ydl(extra)) as ydl:

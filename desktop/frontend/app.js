@@ -145,6 +145,7 @@ $("dl").addEventListener("click", async () => {
         url: urlActual,
         format_id: seleccion.format_id,
         height: seleccion.height || null,
+        ratelimit: null,
       }),
     });
     const datos = await r.json();
@@ -160,8 +161,28 @@ $("dl").addEventListener("click", async () => {
   }
 });
 
-// ── modo demo (capturas): carga un vídeo real y ya ──
-if (new URLSearchParams(location.search).get("demo") === "1") {
-  $("url").value = "https://www.youtube.com/watch?v=jNQXAC9IVRw";
+// ── modos demo (capturas automatizadas) ──
+// demo=1: carga un vídeo real y cambia a oscuro (screenshots claro+oscuro)
+// demo=2: flujo completo para el GIF — carga, selecciona y descarga de verdad
+const DEMO = new URLSearchParams(location.search).get("demo");
+if (DEMO === "1" || DEMO === "2") {
+  // demo 1 (screenshots): vídeo corto. demo 2 (GIF): vídeo grande para que
+  // la barra de progreso se aprecie varios segundos con velocidad y ETA.
+  $("url").value = DEMO === "1"
+    ? "https://www.youtube.com/watch?v=jNQXAC9IVRw"
+    : "https://www.youtube.com/watch?v=dQw4w9WgXcQ";
   setTimeout(() => $("load").click(), 1200);
+  if (DEMO === "1") {
+    setTimeout(() => $("tb-theme").click(), 10000);
+  } else {
+    // al aparecer el botón: elegir el 2º chip (1440p) y descargar
+    const espera = setInterval(() => {
+      if (!$("dl").classList.contains("oculto")) {
+        clearInterval(espera);
+        const chips = document.querySelectorAll(".chip");
+        if (chips[1]) chips[1].click();
+        setTimeout(() => $("dl").click(), 1200);
+      }
+    }, 200);
+  }
 }
