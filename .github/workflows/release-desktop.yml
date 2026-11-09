@@ -52,6 +52,19 @@ jobs:
         shell: bash
         run: npm version --no-git-tag-version "${GITHUB_REF_NAME#v}" || true
 
+      - name: Create prerelease shell (avoids electron-builder duplicate-release race)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        # electron-builder sube los assets en paralelo y, si la release no
+        # existe, cada subida intenta crearla -> releases duplicadas (pasó en
+        # v2.0.0). Pre-creándola aquí, solo adjunta assets.
+        run: |
+          gh release view "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" \
+            || gh release create "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" \
+                 --prerelease --title "$GITHUB_REF_NAME" \
+                 --notes "Draft notes — see CHANGELOG."
+
       - name: Build and publish installer (electron-builder)
         working-directory: desktop/frontend
         env:
