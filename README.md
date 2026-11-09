@@ -31,6 +31,15 @@ A powerful, user-friendly YouTube video downloader with a graphical interface bu
 
 [Download Source Code](#-installation)
 
+---
+
+### 🆕 Try **YTDownloader4K v2** (beta)
+
+**[⬇️ Download v2 Installer](https://github.com/ZabaHD4K/DescargadorYT/releases/download/v2.0.0/YTDownloader4K-Setup-2.0.0.exe)** · [release notes](https://github.com/ZabaHD4K/DescargadorYT/releases/tag/v2.0.0)
+
+Brand-new neumorphic UI (light & dark), silent background auto-updates, same trusted download engine.
+One-click installer · Windows 10/11 · beta channel
+
 </div>
 
 ---
